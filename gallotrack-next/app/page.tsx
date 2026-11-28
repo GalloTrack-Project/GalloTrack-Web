@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
 import LandingNavbar from '@/components/landing/Navbar';
+import LandingSkipLink from '@/components/landing/LandingSkipLink';
+import LandingThemeScope from '@/components/landing/LandingThemeScope';
 import HeroSection from '@/components/landing/HeroSection';
+import FeatureStrip from '@/components/landing/FeatureStrip';
 import FeaturesSection from '@/components/landing/FeaturesSection';
 import HowItWorksSection from '@/components/landing/HowItWorksSection';
 import AboutSection from '@/components/landing/AboutSection';
@@ -35,16 +38,18 @@ export const metadata: Metadata = {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground selection:bg-emerald-500/20 selection:text-emerald-500">
+    <LandingThemeScope>
+      <LandingSkipLink />
       <LandingNavbar />
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <HeroSection />
+        <FeatureStrip />
         <FeaturesSection />
         <HowItWorksSection />
         <AboutSection />
         <CtaSection />
       </main>
       <Footer />
-    </div>
+    </LandingThemeScope>
   );
 }

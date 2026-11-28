@@ -4,7 +4,7 @@ import React from 'react';
 import { cn } from '@/components/ui/utils';
 
 type LogoVariant = 'full' | 'mark';
-type LogoSize = 'sm' | 'md' | 'lg';
+type LogoSize = 'sm' | 'md' | 'lg' | 'xl';
 
 type Props = {
   variant?: LogoVariant;
@@ -20,12 +20,14 @@ const FULL_SIZE: Record<LogoSize, string> = {
   sm: 'h-7',
   md: 'h-8',
   lg: 'h-10',
+  xl: 'h-14',
 };
 
 const MARK_SIZE: Record<LogoSize, string> = {
   sm: 'h-7 w-7',
   md: 'h-8 w-8',
   lg: 'h-10 w-10',
+  xl: 'h-24 w-24',
 };
 
 export default function Logo({

@@ -1,17 +1,22 @@
 'use client';
 
 import React from 'react';
+import { CircleHelp, Mars, Venus } from 'lucide-react';
 import type { FowlRecord } from '@/lib/types';
 import { canFight, sexLabel } from '@/lib/helpers';
 import type { WinRateStats } from '@/lib/win-rate';
 import ChickenPhoto from '@/components/ChickenPhoto';
 import CrisscrossBadge from '@/components/CrisscrossBadge';
 import type { CrisscrossClassification } from '@/lib/lineage';
+import { useT } from '@/lib/i18n';
+import { featherColorOf } from '@/lib/lineage-filters';
+import LineageRecordPill from './LineageRecordPill';
+import LineageStatusBadge from './LineageStatusBadge';
 
 export const STATUS_DOT: Record<string, string> = {
-  Active: 'bg-emerald-500',
-  Archived: 'bg-amber-400',
-  Deceased: 'bg-rose-400',
+  Active: 'bg-win',
+  Archived: 'bg-low-sample',
+  Deceased: 'bg-loss',
 };
 
 export function initials(name: string): string {
@@ -31,15 +36,34 @@ export function recordLabel(stats?: WinRateStats): string {
 }
 
 export function sexTone(fowl: FowlRecord): string {
-  return sexLabel(fowl) === 'Hen'
-    ? 'text-pink-600 dark:text-pink-400'
-    : sexLabel(fowl) === 'Cock'
-      ? 'text-sky-600 dark:text-sky-400'
-      : 'text-muted-foreground';
+  const label = sexLabel(fowl);
+  if (label === 'Hen') return 'text-hen';
+  if (label === 'Cock') return 'text-cock';
+  return 'text-muted-foreground';
 }
 
 export function sexGlyph(fowl: FowlRecord): string {
   return sexLabel(fowl) === 'Hen' ? 'F' : sexLabel(fowl) === 'Cock' ? 'M' : '';
+}
+
+export function SexMark({
+  fowl,
+  className = '',
+  showWord = true,
+}: {
+  fowl: Pick<FowlRecord, 'gender'>;
+  className?: string;
+  showWord?: boolean;
+}) {
+  const label = sexLabel(fowl);
+  const Icon = label === 'Hen' ? Venus : label === 'Cock' ? Mars : CircleHelp;
+  const tone = label === 'Hen' ? 'text-hen' : label === 'Cock' ? 'text-cock' : 'text-muted-foreground';
+  return (
+    <span className={`inline-flex min-w-0 items-center gap-1 font-black ${tone} ${className}`}>
+      <Icon className="h-3 w-3 shrink-0" aria-hidden="true" />
+      {showWord && <span className="truncate">{label}</span>}
+    </span>
+  );
 }
 
 export interface LineageBirdCardProps {
@@ -79,7 +103,10 @@ export default function LineageBirdCard({
   testId = 'lineage-bird-card',
   className = '',
 }: LineageBirdCardProps) {
+  const t = useT();
   const fightsEnabled = canFight(fowl);
+  const feather = featherColorOf(fowl);
+  const wingBand = fightsEnabled ? (fowl.wing_band || '').trim() : '';
 
   return (
     <button
@@ -92,81 +119,110 @@ export default function LineageBirdCard({
       aria-pressed={isSelected}
       title={
         title ??
-        `${fowl.name} · ${code || 'no code'} · ${sexLabel(fowl)} · ${
-          offspringCount > 0 ? `${offspringCount} offspring` : 'no registered offspring'
+        `${fowl.name} · ${code || t('lineageDirectory.noCode')} · ${sexLabel(fowl)} · ${
+          offspringCount > 0
+            ? `${offspringCount} ${t('lineageDirectory.offspringLabel').toLowerCase()}`
+            : t('lineageDirectory.noRegisteredOffspring')
         }`
       }
-      className={`bg-card group flex h-full w-full cursor-pointer flex-col rounded-lg border px-2.5 py-2 text-left shadow-xs transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/60 focus-visible:outline-none ${
+      className={`bg-card group relative flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-xl border p-2.5 text-left shadow-xs transition-[border-color,box-shadow,opacity] focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none ${
         isSelected
-          ? 'border-emerald-500 ring-2 ring-emerald-500/40'
+          ? 'border-brand-orange ring-2 ring-brand-orange/45'
           : isHighlighted
-            ? 'border-amber-400 ring-2 ring-amber-400/40'
-            : 'border-border hover:border-emerald-400'
-      } ${isRoot ? 'bg-emerald-50/50 dark:bg-emerald-950/20' : ''} ${
+            ? 'border-brand-orange/70 ring-2 ring-brand-orange/25'
+            : 'border-border hover:border-brand-orange/60'
+      } ${isRoot ? 'bg-accent-soft/35 border-primary/30' : ''} ${
         isDimmed ? 'opacity-40 saturate-50' : ''
       } ${className}`}
     >
-      <div className="flex items-center gap-1.5">
+      <div className="flex min-w-0 items-start gap-2">
         <ChickenPhoto
           name={fowl.name}
           code={code}
           imageUrl={fowl.image_url}
           photoPath={fowl.photo_path}
           photoThumbPath={fowl.photo_thumb_path}
-          size={24}
-          className="border-border h-6 w-6"
+          size={56}
+          shape="square"
+          interactive={false}
+          className="border-border h-14 w-14 shrink-0 rounded-lg border"
           fallback={
             <span
-              className={`flex h-full w-full items-center justify-center text-[9px] font-black ${
+              className={`flex h-full w-full items-center justify-center text-[11px] font-black ${
                 sexLabel(fowl) === 'Hen'
-                  ? 'bg-pink-50 text-pink-700 dark:bg-pink-950/40 dark:text-pink-300'
-                  : 'bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300'
+                  ? 'bg-hen-bg text-hen'
+                  : 'bg-cock-bg text-cock'
               }`}
               aria-hidden="true"
             >
               {initials(fowl.name)}
             </span>
           }
+          unavailableFallback={
+            <span className="text-muted-foreground flex h-full w-full items-center justify-center p-0.5 text-center text-[7px] leading-tight font-bold break-words">
+              {t('registry.cardPhotoUnavailable')}
+            </span>
+          }
         />
-        {code && (
-          <span className="border-border bg-muted text-foreground shrink-0 rounded border px-1 py-0.5 font-mono text-[10px] font-black uppercase">
-            {code}
-          </span>
-        )}
-        {crisscross?.classification.isCrisscross && (
-          <CrisscrossBadge
-            classification={crisscross.classification}
-            pairName={crisscross.pairName}
-            compact
-            className="px-1"
-          />
-        )}
-        <span className={`shrink-0 text-[10px] font-black ${sexTone(fowl)}`}>
-          {sexGlyph(fowl)} {sexLabel(fowl)}
-        </span>
-        <span
-          className={`ml-auto h-1.5 w-1.5 shrink-0 rounded-full ${
-            STATUS_DOT[fowl.status] || 'bg-muted-foreground'
-          }`}
-          title={fowl.status}
-        />
-        {isRoot && (
-          <span className="text-[9px] font-black tracking-wider text-emerald-700 uppercase dark:text-emerald-400">
-            Root
-          </span>
-        )}
+
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex min-w-0 items-start gap-1">
+            <p
+              className="text-card-foreground line-clamp-2 min-w-0 flex-1 text-xs leading-tight font-black"
+              title={fowl.name}
+            >
+              {fowl.name}
+            </p>
+            {isRoot && (
+              <span className="bg-primary text-primary-foreground shrink-0 rounded px-1 py-0.5 text-[8px] font-black tracking-wider uppercase">
+                {t('lineageDirectory.rootTag')}
+              </span>
+            )}
+          </div>
+
+          <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-1">
+            <SexMark fowl={fowl} className="text-[9px]" />
+            {code && (
+              <span className="border-border bg-muted text-foreground shrink-0 rounded border px-1 py-0.5 font-mono text-[9px] font-black uppercase">
+                {code}
+              </span>
+            )}
+            {crisscross?.classification.isCrisscross && (
+              <CrisscrossBadge
+                classification={crisscross.classification}
+                pairName={crisscross.pairName}
+                compact
+                className="px-1"
+              />
+            )}
+          </div>
+
+          <p className="text-muted-foreground mt-0.5 truncate text-[9px] font-semibold" title={feather}>
+            {feather || '—'}
+          </p>
+          {wingBand && (
+            <p className="text-muted-foreground truncate text-[9px] font-semibold" title={wingBand}>
+              {t('lineageDirectory.wingBand', { band: wingBand })}
+            </p>
+          )}
+        </div>
       </div>
-      <p
-        className="text-card-foreground mt-1 line-clamp-2 text-xs leading-tight font-black"
-        title={fowl.name}
-      >
-        {fowl.name}
-      </p>
-      <div className="text-muted-foreground mt-auto flex items-center justify-between gap-1 pt-1 text-[10px] font-semibold">
-        <span className="truncate">
-          {offspringCount > 0 ? `${offspringCount} offspring` : fowl.breed || 'No offspring'}
-        </span>
-        <span className="shrink-0">{fightsEnabled ? recordLabel(stats) : ''}</span>
+
+      <div className="mt-auto flex min-w-0 items-center justify-between gap-1 pt-1.5">
+        <div className="flex min-w-0 items-center gap-1">
+          <LineageStatusBadge fowl={fowl} compact />
+          <span className="text-muted-foreground shrink-0 text-[9px] font-bold">
+            {offspringCount} {t('lineageDirectory.offspringLabel').toLowerCase()}
+          </span>
+        </div>
+        {fightsEnabled &&
+          (stats.total > 0 ? (
+            <LineageRecordPill stats={stats} compact className="shrink-0" />
+          ) : (
+            <span className="text-muted-foreground shrink-0 text-[9px] font-bold">
+              {t('lineageDirectory.noFights')}
+            </span>
+          ))}
       </div>
     </button>
   );

@@ -275,12 +275,14 @@ Accessed by clicking the top `+ Register Chicken` button. Handled in [EncodeForm
 - **Step 1: Core Identifiers**:
   - `Identifier Name` (Required): Unique text name for the bird. Checked for duplicates.
   - `Unique Chicken Identifier` (Auto-Generated, `bird_code`):
-    - System/database identifier adhering to gamefowl lineage conventions: Sires get plain sequential numbers (`1, 2, 3`), Dams get single sequential letters (`A, B, C`, skipping `X`), and Offspring get the combined sire number + dam letter + sequence counter (`1A1, 1A2, 2B1`).
+    - System/database identifier adhering to gamefowl lineage conventions: Sires get plain sequential numbers (`1, 2, 3`), Dams get sequential letters (`A, B, C`), and Offspring get the combined sire number + dam letter + sequence counter (`1A1, 1A2, 2B1`).
+    - The single letter `X` is intentionally reserved for **Unknown Dam** (`1X1`, `0X1`); it is not assigned as a normal hen code. After `Z`, the dam letter sequence continues spreadsheet-style as `AA`, `AB`, `AC`, and so on. Single `X` is skipped wherever it would otherwise appear; multi-letter codes such as `AX` remain valid.
+    - Codes are never reused, including for archived, sold, or deceased chickens; uniqueness is case-insensitive per farm.
     - For offspring, the code is generated only once **both** sire and dam are chosen; otherwise it remains blank with the guide *"Select both sire and dam"*.
     - Can be customized via the **"Edit identifier manually"** toggle with real-time role-pattern validation, ASCII normalization (e.g., converting subscript notations like `1A₁` to plain `1A1`), case-insensitive uniqueness check against all flock records (including archived and deceased birds), and parentage mismatch warnings.
     - Governed by unique database constraint `fowl_user_bird_code_key`.
   - `Wing Band ID` (Optional, `wing_band`):
-    - Purely optional manual input for the physical metal band code stamped on the physical bird's wing (`max 24 characters`, alphanumeric plus `.-_`).
+    - Purely optional manual input for the physical metal band code stamped on the physical bird's wing (`max 50 characters`, alphanumeric plus `.-_`).
     - **Independent Namespace**: It is completely separate from `bird_code`. A physical band value such as `1A1` never collides with or blocks system identifier `1A1`, and vice versa.
     - Remains `null` when left blank, is never auto-filled or overwritten from `bird_code`, and is preserved untouched if an offspring is promoted to breeding stock.
   - `Genetic Strain` (Required): Searchable tag selector populated from your farm's custom breeds directory (`/breeds`). If no breeds are registered yet, shows *"No breeds yet. Add your breeds first."* with a direct link to register your foundation bloodlines.
@@ -305,14 +307,14 @@ Accessed by clicking the top `+ Register Chicken` button. Handled in [EncodeForm
 #### What Is Saved in the Database When Registering
 The save process executes in [fowl-context.tsx:626-802](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/lib/contexts/fowl-context.tsx#L626-L802):
 1. **Photo Storage**: If an image is selected, it uploads to Supabase Storage bucket `fowl-images` under `fowl/{timestamp}-{random}.ext`. The public web URL is generated.
-2. **Counter Increment**: Calls database function `get_next_fowl_identifier` in [20261007000002_automatic_unique_identifiers.sql](file:///c:/Users/angelica/Desktop/GalloTrack-Web/supabase/migrations/20261007000002_automatic_unique_identifiers.sql) which locks and updates the counter in table `fowl_identifier_counters`.
+2. **Counter Increment**: Attempts to call database function `get_next_fowl_identifier` from [20261007000002_automatic_unique_identifiers.sql](file:///c:/Users/angelica/Desktop/GalloTrack-Web/supabase/migrations/20261007000002_automatic_unique_identifiers.sql). That migration is not applied in production, so the app currently uses its client-side collision-safe generator instead. When the RPC exists, it locks and updates `fowl_identifier_counters`.
 3. **Chicken Insert**: Inserts a new row into table `fowl`:
    - `user_id`, `name`, `breed`, `gender`, `color`, `color_category`, `growth_stage`, `behavior_trait`, `eye_variant`, `birthdate`, `age`, `weight`, `height`, `leg_color`.
    - `sire`, `dam` (text snapshots).
    - `sire_id`, `dam_id` (resolved database integer IDs from existing birds).
    - `sire_pct`, `dam_pct` (legacy columns: 100 if foundation, 50 if parents).
    - `bloodline_pct`, `bloodline_composition` (JSON breakdown of strains).
-   - `chicken_code`, `bird_code`, `wing_band`, `status = 'Active'`, `image_url`.
+   - `bird_code`, `wing_band`, `status = 'Active'`, `image_url`.
 4. **Database Triggers**:
    - `fowl_autofill_pairing_id` checks table `breeding_pairings` and links `pairing_id` if a matching active pair exists.
    - `sync_pairing_offspring_seq` increments `breeding_pairings.offspring_seq` by 1.
@@ -339,7 +341,7 @@ Each card in the registry list shows the bird’s code, wing band tag, strain, g
 - **Promote to Breeder Button** (On Offspring Cards):
   - Accessible on offspring in the Fight Prospects tab.
   - Prompts whether to promote to **Breeding Male** (assigns next sire number `1, 2, ...`) or **Breeding Female** (assigns next dam letter `A, B, ...`).
-  - Preserves the original birth code in column `fowl.birth_code` (e.g. "born as 1A1"), updates `fowl.chicken_code`, sets `fowl.registry_role = 'Breeding Male'` or `'Breeding Female'`, and sets `breeding_role = 'breeder'`.
+  - Preserves the original birth code in column `fowl.birth_code` (e.g. "born as 1A1"), updates `fowl.bird_code`, sets `fowl.registry_role = 'Breeding Male'` or `'Breeding Female'`, and sets `breeding_role = 'breeder'`.
 
 ### Filters, Search, and Sorting
 - **Search Bar**: Debounced instant search in [RegistryFilterBar.tsx](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/components/profiling/RegistryFilterBar.tsx). Searches by name, chicken identifier, wing band ID, and strain. Highlights matching letters in yellow.
@@ -560,7 +562,7 @@ The Profile page is located at `/profile` ([gallotrack-next/app/(dashboard)/prof
 ```text
 ┌──────────────────────┐         1:N         ┌──────────────────────────────┐
 │       profiles       │────────────────────<│             fowl             │
-│ (id, farm_name, role)│                     │ (id, chicken_code, wing_band)│
+│ (id, farm_name, role)│                     │ (id, bird_code, wing_band)│
 └──────────────────────┘                     └──────────────────────────────┘
            │ 1:1                                       │ 1:N            │ 1:N
            ▼                                           ▼                ▼
@@ -634,7 +636,7 @@ The Profile page is located at `/profile` ([gallotrack-next/app/(dashboard)/prof
 4. In Step 2, enter Birth Date: `2024-01-10`.
 5. In Step 3, leave Sire and Dam blank (defaults to "Foundation Stock").
 6. Click **REGISTER**.
-7. System saves the rooster to `fowl` with `chicken_code = '1'`. It appears in the **Breeding Male** tab.
+7. System saves the rooster to `fowl` with `bird_code = '1'`. It appears in the **Breeding Male** tab.
 8. Repeat for a hen: Name: *"Kelso Lady"*, Gender: *"Dam"*. Code auto-assigns next letter (e.g. `'A'`). It saves to `fowl` and appears in the **Breeding Female** tab.
 
 ### b) Register an Offspring from a Pair
@@ -644,7 +646,7 @@ The Profile page is located at `/profile` ([gallotrack-next/app/(dashboard)/prof
 4. Identifier preview immediately updates live to `1A1 · Auto-Assigned (Offspring)`.
 5. Step 3 displays live 50% Butcher / 50% Kelso bloodline breakdown.
 6. Click **REGISTER**.
-7. Offspring is saved with `chicken_code = '1A1'`, `sire_id = [Black Butcher ID]`, `dam_id = [Kelso Lady ID]`.
+7. Offspring is saved with `bird_code = '1A1'`, `sire_id = [Black Butcher ID]`, `dam_id = [Kelso Lady ID]`.
 8. The bird is placed in the **Fight Prospects** tab.
 
 ### c) Record a Match, Watch Media, and Share It
@@ -704,7 +706,7 @@ The Profile page is located at `/profile` ([gallotrack-next/app/(dashboard)/prof
 | **Fight Prospects Tab** | Offspring only (Codes: `1A1, 1A2`) | **Complies** | Filtered in [registry-roles.ts:167-173](file:///c:/Users/angelica/Desktop/GalloTrack-Web/gallotrack-next/lib/registry-roles.ts#L167-L173). Offspring birds appear here. |
 | **One Role per Chicken** | No chicken appears in >1 tab | **Complies** | `assertTabExclusivity` enforces mutual exclusivity for Males, Females, and Offspring. The former Sire Material tab has been replaced by the "Retired Fighter" badge and filter. |
 | **One Source of Truth for Counts** | All pages report identical numbers | **Minor Discrepancies Observed** | Dashboard reports active chickens from `activeFowls.length`, whereas Inventory reports counts through `inventoryCounts()`. If legacy statuses exist, numbers can vary slightly. The Inventory **Active Breeders** tab deliberately counts only the breeding herd (`isBreederStock()`), so it is smaller than the dashboard's active total — the rest of the living roster sits with Fight Prospects under **All**. |
-| **Unique, Permanent Identifiers** | Never reused, unique per farm | **Complies** | Enforced by database unique index `fowl_user_chicken_code_key` in [20261007000002_automatic_unique_identifiers.sql](file:///c:/Users/angelica/Desktop/GalloTrack-Web/supabase/migrations/20261007000002_automatic_unique_identifiers.sql). |
+| **Unique, Permanent Identifiers** | Never reused, unique per farm | **Complies** | Enforced by the live database unique index `fowl_user_bird_code_key` from [20260925000000_bird_code_and_bloodline_composition.sql](file:///c:/Users/angelica/Desktop/GalloTrack-Web/supabase/migrations/20260925000000_bird_code_and_bloodline_composition.sql). |
 | **Internal IDs Hidden from Users** | Only show bird codes / wing bands | **Minor Inconsistency** | The registration form header still displays `ID: GT-0063` (the predicted database row ID), which can confuse owners into thinking it is a chicken identifier. |
 | **Warn Before Archiving Active Parents** | Warn if bird has living offspring | **Missing Confirmation Warning** | Archiving a sire or dam with existing offspring proceeds without a prompt warning the owner that the bird is an active parent of registered progeny. |
 

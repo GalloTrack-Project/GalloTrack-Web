@@ -5,11 +5,18 @@ import { isAdminProfile } from '@/lib/admin';
 import { useUI } from './ui-context';
 import { toastMessage } from '@/lib/toast-bus';
 
+export type LoginCredentials = {
+  email: string;
+  password: string;
+  rememberMe: boolean;
+};
+
 interface AuthContextValue {
   currentUserId: string | null;
   isAdmin: boolean;
   adminName: string;
   setAdminName: (v: string) => void;
+  email: string;
   avatarUrl: string;
   setAvatarUrl: (v: string) => void;
   userHub: string;
@@ -36,7 +43,7 @@ interface AuthContextValue {
   loading: boolean;
   setLoading: (v: boolean) => void;
   authChecked: boolean;
-  handleLogin: (e: React.FormEvent) => Promise<void>;
+  handleLogin: (e?: React.SyntheticEvent, credentials?: LoginCredentials) => Promise<void>;
   handleLogout: () => Promise<void>;
   handleSendResetLink: (e: React.FormEvent) => Promise<void>;
 }
@@ -62,6 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminName, setAdminName] = useState('Farm Owner');
+  const [email, setEmail] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [userHub, setUserHub] = useState('ISUFST DINGLE HUB');
   const [userActive, setUserActive] = useState(true);
@@ -91,8 +99,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (session && session.user) {
             setCurrentUserId(session.user.id);
             localStorage.setItem('gallotrack_user_id', session.user.id);
-            document.cookie = 'gallotrack_session=1; path=/; max-age=604800; SameSite=Lax';
+            document.cookie = `gallotrack_session=1; path=/${savedRememberMe ? '; max-age=2592000' : ''}; SameSite=Lax`;
             setUsername(session.user.email?.split('@')[0] || 'admin');
+            setEmail(session.user.email || '');
             ui.setCurrentPage('dashboard');
             try {
               const { data: profile } = await supabase
@@ -147,6 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setCurrentUserId(null);
       setUsername('');
+      setEmail('');
       setPassword('');
       setError('');
       ui.setCurrentPage('login');
@@ -183,6 +193,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           data: { user },
         } = await supabase.auth.getUser();
         if (user) {
+          setEmail(user.email || '');
           const { data: profile } = await supabase
             .from('profiles')
             .select('*')
@@ -297,18 +308,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const handleLogin = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
+    async (e?: React.SyntheticEvent, credentials?: LoginCredentials) => {
+      e?.preventDefault();
       setError('');
       setSuccessMessage('');
       setLoading(true);
 
-      const loginEmail = username.trim();
+      const loginEmail = (credentials?.email ?? username).trim();
+      const loginPassword = credentials?.password ?? password;
+      const loginRememberMe = credentials?.rememberMe ?? rememberMe;
 
       try {
         const { data, error: authError } = await supabase.auth.signInWithPassword({
           email: loginEmail,
-          password: password,
+          password: loginPassword,
         });
 
         if (authError) {
@@ -338,9 +351,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         setCurrentUserId(data.user.id);
+        setEmail(data.user.email || loginEmail);
         if (typeof window !== 'undefined') {
           localStorage.setItem('gallotrack_user_id', data.user.id);
-          document.cookie = 'gallotrack_session=1; path=/; max-age=604800; SameSite=Lax';
+          document.cookie = `gallotrack_session=1; path=/${loginRememberMe ? '; max-age=2592000' : ''}; SameSite=Lax`;
         }
 
         if (!data.user.email_confirmed_at) {
@@ -351,7 +365,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        if (typeof window !== 'undefined' && rememberMe) {
+        if (typeof window !== 'undefined' && loginRememberMe) {
           localStorage.setItem('gallotrack_rememberMe', 'true');
         }
 
@@ -368,7 +382,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         let finalWelcomeName = welcomeName;
         if (!profile) {
-          finalWelcomeName = await syncProfileFromUser(data.user, username);
+          finalWelcomeName = await syncProfileFromUser(data.user, loginEmail);
         }
 
         ui.setCurrentPage('dashboard');
@@ -391,6 +405,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const handleLogout = useCallback(async () => {
     setCurrentUserId(null);
     setUsername('');
+    setEmail('');
     setPassword('');
     ui.setCurrentPage('login');
     if (typeof window !== 'undefined') {
@@ -442,6 +457,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAdmin,
     adminName,
     setAdminName,
+    email,
     avatarUrl,
     setAvatarUrl,
     userHub,

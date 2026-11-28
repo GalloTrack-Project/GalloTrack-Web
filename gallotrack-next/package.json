@@ -17,6 +17,7 @@
     "test:layout": "tsx scripts/dashboard-kpi-layout-check.ts && tsx scripts/hub-identity-layout-check.ts",
     "test:hub-layout": "tsx scripts/hub-identity-layout-check.ts",
     "test:profile-layout": "tsx scripts/profile-badge-layout-check.ts",
+    "seed:demo": "tsx scripts/seed-demo.ts",
     "check:exclusivity": "tsx scripts/check-tab-exclusivity.ts",
     "check:emoji": "tsx scripts/check-emoji.ts",
     "check:encoding": "tsx scripts/check-encoding.ts && tsx scripts/check-emoji.ts",
@@ -40,6 +41,7 @@
     "gate": "node scripts/standard-gates.mjs && npm run check:encoding && tsc --noEmit && eslint . --cache && vitest run"
   },
   "dependencies": {
+    "@hookform/resolvers": "^7.0.7",
     "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.114.0",
@@ -54,6 +56,7 @@
     "react-chartjs-2": "^5.3.1",
     "react-dom": "19.2.4",
     "react-easy-crop": "^6.2.3",
+    "react-hook-form": "^7.92.0",
     "zod": "^4.5.4"
   },
   "devDependencies": {

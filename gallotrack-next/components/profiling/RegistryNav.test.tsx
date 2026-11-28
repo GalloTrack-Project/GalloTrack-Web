@@ -28,9 +28,11 @@ describe('RegistryNav', () => {
     const desktopTabs = tabs.slice(0, 4);
     expect(desktopTabs[0]).toHaveTextContent(/Cocks/i);
     expect(desktopTabs[0]).toHaveTextContent('11');
+    expect(desktopTabs[0].querySelector('svg[data-fowl-sex="cock"]')).not.toBeNull();
 
     expect(desktopTabs[1]).toHaveTextContent(/Hens/i);
     expect(desktopTabs[1]).toHaveTextContent('14');
+    expect(desktopTabs[1].querySelector('svg[data-fowl-sex="hen"]')).not.toBeNull();
 
     expect(desktopTabs[2]).toHaveTextContent(/Offspring/i);
     expect(desktopTabs[2]).toHaveTextContent('20');

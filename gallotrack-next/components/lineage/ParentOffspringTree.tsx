@@ -44,9 +44,9 @@ interface Props {
 }
 
 const LEGEND = [
-  { label: 'Active', dot: 'bg-emerald-500' },
-  { label: 'Archived', dot: 'bg-amber-400' },
-  { label: 'Deceased', dot: 'bg-rose-400' },
+  { label: 'Active', dot: 'bg-win' },
+  { label: 'Archived', dot: 'bg-low-sample' },
+  { label: 'Deceased', dot: 'bg-loss' },
 ];
 
 export default function ParentOffspringTree({

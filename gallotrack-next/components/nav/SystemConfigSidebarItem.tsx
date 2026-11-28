@@ -122,7 +122,7 @@ export default function SystemConfigSidebarItem({ item }: Props) {
         onKeyDown={handleParentKeyDown}
         className={cn(
           'flex w-full items-center gap-3 rounded-sm px-4 py-2.5 text-left text-sm tracking-wide transition-colors duration-150',
-          'focus-visible:ring-accent focus-visible:ring-offset-card focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
+          'focus-visible:ring-sidebar-foreground focus-visible:ring-2 focus-visible:outline-none',
           isSystemActive
             ? 'bg-accent text-accent-foreground font-semibold shadow-sm'
             : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground font-medium',
@@ -166,7 +166,7 @@ export default function SystemConfigSidebarItem({ item }: Props) {
                   }}
                   onKeyDown={handleSubmenuKeyDown}
                   className={cn(
-                    'focus-visible:ring-accent focus-visible:ring-inset flex items-center gap-2 rounded-sm border-l-2 py-2 pr-3 pl-10 text-xs transition-colors duration-150 focus-visible:ring-2 focus-visible:outline-none',
+                    'focus-visible:ring-sidebar-foreground flex min-h-10 items-center gap-2 rounded-lg border-l-2 py-2 pr-3 pl-10 text-xs transition-colors duration-150 focus-visible:ring-2 focus-visible:outline-none',
                     isActive
                       ? 'border-accent bg-accent/10 text-accent font-semibold'
                       : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground border-transparent font-medium',

@@ -119,6 +119,8 @@ describe('buildReportHtml', () => {
     expect(html).toContain('size: A4 portrait');
     expect(html).toContain('margin: 12mm');
     expect(html).toContain('print-color-adjust: exact');
+    expect(html).toContain('background: #ffffff');
+    expect(html).toContain('color-scheme: light');
     expect(html).toContain('break-inside: avoid');
     expect(html).toContain('@media print');
   });

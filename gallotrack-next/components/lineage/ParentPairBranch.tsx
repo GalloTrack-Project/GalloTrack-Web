@@ -81,7 +81,7 @@ export default function ParentPairBranch({
           type="button"
           onClick={onTogglePair}
           aria-expanded={pair.isOpen}
-          className="border-border bg-card text-muted-foreground hover:text-foreground min-h-11 cursor-pointer rounded border px-3 text-xs font-bold transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/60 focus-visible:outline-none sm:min-h-8"
+          className="border-border bg-card text-muted-foreground hover:text-foreground min-h-11 cursor-pointer rounded border px-3 text-xs font-bold transition-colors focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:outline-none sm:min-h-8"
         >
           {pair.isOpen ? 'Collapse' : `Expand (${pair.offspring.length})`}
         </button>
@@ -208,7 +208,7 @@ export default function ParentPairBranch({
                   <button
                     type="button"
                     onClick={() => setShowAll(true)}
-                    className="bg-card border-border text-muted-foreground hover:text-foreground min-h-[78px] w-full cursor-pointer rounded-lg border border-dashed px-3 text-xs font-bold transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/60 focus-visible:outline-none"
+                    className="bg-card border-border text-muted-foreground hover:text-foreground min-h-[78px] w-full cursor-pointer rounded-lg border border-dashed px-3 text-xs font-bold transition-colors focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:outline-none"
                   >
                     +{hiddenCount} more
                   </button>

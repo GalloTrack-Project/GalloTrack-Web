@@ -117,11 +117,11 @@ export interface LineageLayoutOptions {
 /** Family Tree canvas depth. The starting bird counts as generation 1. */
 export const FAMILY_TREE_GENERATIONS = 3;
 
-export const LINEAGE_NODE_WIDTH = 196;
-export const LINEAGE_NODE_HEIGHT = 104;
+export const LINEAGE_NODE_WIDTH = 232;
+export const LINEAGE_NODE_HEIGHT = 116;
 const NODE_GAP = 28;
 const CHAIN_GAP = 74;
-const ROW_GAP = 138;
+const ROW_GAP = 174;
 /** Vertical gap between wrapped sub-rows inside the same generation. */
 const WRAP_GAP = 84;
 const PAD_X = 92;

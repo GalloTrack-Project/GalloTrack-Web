@@ -124,10 +124,11 @@ describe('Validation & Summary Panel', () => {
     expect(panel.className).toContain('min-w-0');
     expect(panel.className).toContain('overflow-hidden');
 
-    // Responsive grid: one column on mobile, three on desktop
+    // Responsive grid: one column on mobile, two on tablet, four on wide desktop
     const grid = screen.getByTestId('validation-summary-grid');
     expect(grid.className).toContain('grid-cols-1');
-    expect(grid.className).toContain('md:grid-cols-3');
+    expect(grid.className).toContain('sm:grid-cols-2');
+    expect(grid.className).toContain('xl:grid-cols-4');
 
     // Badges inside the grid never truncate or overflow
     const badges = grid.querySelectorAll('[data-status-badge]');

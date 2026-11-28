@@ -60,16 +60,21 @@ for a foundation-stock chicken, then expand **Details**.
 
 Run `npm run test:profile-layout` after `npm run build`. It checks the profile badge row and
 Chicken Inventory card badges at 320, 375, 640, 768, 1024, 1280, and 1920 px and at 100%,
-125%, 150%, 175%, and 200% zoom in English, Tagalog, and Hiligaynon. Then complete the manual
-zoom matrix down to 25% and up to 500%.
+125%, 150%, and 200% zoom in light and dark themes.
 
-- [ ] The profile badge row wraps instead of pushing past the modal edge.
-- [ ] `Outcross` is the visible short label; its full explanation is in the tooltip and `aria-label`.
-- [ ] `Crossbred · 50% Hatch / 50% Lemon (assumed)` wraps or shortens with a tooltip; it is never clipped.
-- [ ] The inventory card badge chips keep their text inside the card at every width and zoom.
-- [ ] No badge has `white-space: nowrap`, a fixed width, or a fixed height.
+- [ ] Badges stay inside their cards and wrap to additional lines instead of being clipped.
+- [ ] Chicken names, breed labels, and coding chips are never truncated by an ellipsis.
 - [ ] No horizontal page scrollbar, clipped text, or badge outside its row appears at any checked width, zoom, theme, or language.
 - [ ] Stored bloodline values and calculations are unchanged.
+
+## Heritage Dashboard Shell
+
+Check the dashboard at 320, 375, 640, 768, 1024, 1280, and 1920 px, then at every manual zoom level
+from 25% to 500%, in English, Tagalog, and Hiligaynon.
+
+- [ ] The sidebar, top bar, and quick-action cards remain aligned.
+- [ ] KPI cards, milestone rows, bloodline cards, donut legend, and recent match rows wrap without clipping.
+- [ ] No horizontal page scrollbar appears at any width, zoom, theme, or language.
 
 ## Full Siblings & Families Cards
 
@@ -83,3 +88,19 @@ zoom. Then verify the manual matrix down to 25% and up to 500%.
 - [ ] Names wrap with `overflow-wrap: anywhere`; badges wrap; no fixed heights or `nowrap` clip text.
 - [ ] Light/dark and English/Tagalog/Hiligaynon labels stay inside the card.
 - [ ] No horizontal page scrollbar and no clipped text at any checked width or zoom.
+
+## Heritage Landing Page
+
+Check the public landing page at 320, 375, 640, 768, 1024, 1280, and 1920 px, then at manual zoom
+levels from 25% to 500%, in English, Tagalog, and Hiligaynon, light and dark.
+
+- [ ] Header links, logo, language switcher, theme toggle, Log in, and Sign up stay inside the bar at every width.
+- [ ] The mobile menu opens as a drawer, traps Tab focus, closes with Escape, and returns focus to the menu button.
+- [ ] Hero headline, badge, subtitle, buttons, and reassurance lines wrap without clipping.
+- [ ] The farm photo keeps its 4/3 frame, the caption comes from `HERO_IMAGES`, and image-error fallback shows the brand mark.
+- [ ] With two images, arrows, dots, and pause work; autoplay stops on hover/focus and is off under reduced motion.
+- [ ] Decorative swooshes, feather watermarks, and the farm silhouette stay behind text and are hidden on small screens.
+- [ ] The five feature cards stack without horizontal scroll and link to the matching capability anchors below.
+- [ ] Core capabilities, workflow, about, CTA, and footer text stays inside cards in all three languages.
+- [ ] Login and Sign-up keep the same header and preserve their forms, validation, and auth routes.
+- [ ] No horizontal page scrollbar appears at any checked width, zoom, theme, or language.

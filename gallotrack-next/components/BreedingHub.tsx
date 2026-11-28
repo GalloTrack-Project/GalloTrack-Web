@@ -1,5 +1,6 @@
 'use client';
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import type {
   BreedingPairRecord,
   FowlRecord,
@@ -13,7 +14,6 @@ import {
   AlertTriangle,
   Heart,
   Hash,
-  Type,
   Combine,
   ChevronDown,
   ChevronUp,
@@ -29,13 +29,12 @@ import {
   Mars,
   Venus,
   Egg,
-  Link2,
+  Users,
 } from 'lucide-react';
-import { formatBirdCodeForDisplay, resolveBirdCodes } from '@/lib/bird-code';
+import { formatBirdCodeForDisplay, offspringBase, resolveBirdCodes } from '@/lib/bird-code';
 import { sexLabel, parentBreedOf, isFemale, canFight } from '@/lib/helpers';
 import { buildChickenMatchStatsMap, getChickenMatchStats } from '@/lib/win-rate';
 import { offspringForPairing, pairingCodeFor, pairingConflict } from '@/lib/lineage';
-import { ROLE_LABEL } from '@/lib/registry-roles';
 import { toastMessage as showToastMessage } from '@/lib/toast-bus';
 import {
   classifyBirdCode,
@@ -75,6 +74,7 @@ import { classifyCrisscross } from '@/lib/lineage';
 import BreedingTypeBadge from '@/components/BreedingTypeBadge';
 import { getBreedingClassification } from '@/lib/breeding-classification';
 import { computeBloodlineComposition, blendCompositions } from '@/lib/bloodline-composition';
+import ChickenPhoto from '@/components/ChickenPhoto';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -96,41 +96,41 @@ const SEVERITY_CONFIG: Record<
   { bg: string; text: string; border: string; dot: string }
 > = {
   Minor: {
-    bg: 'bg-amber-50 dark:bg-amber-950/40',
-    text: 'text-amber-700 dark:text-amber-400',
-    border: 'border-amber-200 dark:border-amber-800',
-    dot: 'bg-amber-400',
+    bg: 'bg-low-sample-bg dark:bg-low-sample-bg',
+    text: 'text-warning dark:text-warning',
+    border: 'border-warning/30 dark:border-warning/30',
+    dot: 'bg-warning',
   },
   Moderate: {
-    bg: 'bg-orange-50 dark:bg-orange-950/40',
-    text: 'text-orange-700 dark:text-orange-400',
-    border: 'border-orange-200 dark:border-orange-800',
-    dot: 'bg-orange-500',
+    bg: 'bg-low-sample-bg dark:bg-low-sample-bg',
+    text: 'text-warning dark:text-warning',
+    border: 'border-warning/30 dark:border-warning/30',
+    dot: 'bg-warning',
   },
   Severe: {
-    bg: 'bg-rose-50 dark:bg-rose-950/40',
-    text: 'text-rose-700 dark:text-rose-400',
-    border: 'border-rose-200 dark:border-rose-800',
-    dot: 'bg-rose-500',
+    bg: 'bg-loss-bg dark:bg-loss-bg',
+    text: 'text-danger dark:text-danger',
+    border: 'border-danger/30 dark:border-danger/30',
+    dot: 'bg-danger',
   },
   Critical: {
-    bg: 'bg-red-50 dark:bg-red-950/40',
-    text: 'text-red-700 dark:text-red-400',
-    border: 'border-red-200 dark:border-red-800',
-    dot: 'bg-red-600 animate-pulse',
+    bg: 'bg-loss-bg dark:bg-loss-bg',
+    text: 'text-danger dark:text-danger',
+    border: 'border-danger/30 dark:border-danger/30',
+    dot: 'bg-danger animate-pulse',
   },
 };
 
 const OUTCOME_CONFIG: Record<PairingOutcome, { bg: string; text: string; border: string }> = {
   Active: {
-    bg: 'bg-emerald-50 dark:bg-emerald-950/40',
-    text: 'text-emerald-700 dark:text-emerald-400',
-    border: 'border-emerald-200 dark:border-emerald-800',
+    bg: 'bg-win-bg dark:bg-win-bg',
+    text: 'text-success dark:text-success',
+    border: 'border-success/30 dark:border-success/30',
   },
   Completed: {
-    bg: 'bg-sky-50 dark:bg-sky-950/40',
-    text: 'text-sky-700 dark:text-sky-400',
-    border: 'border-sky-200 dark:border-sky-800',
+    bg: 'bg-cock-bg dark:bg-cock-bg',
+    text: 'text-cock dark:text-cock',
+    border: 'border-cock/30 dark:border-cock/30',
   },
   Discontinued: { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' },
 };
@@ -143,6 +143,58 @@ const codeOf = (fowl: FowlRecord, codes: Map<string, string>): string =>
 // CODING SYSTEM VISUALIZER
 // ─────────────────────────────────────────────────────────────────────────────
 
+function FarmCodeChips({
+  fowls,
+  codes,
+  kind,
+  emptyLabel,
+}: {
+  fowls: FowlRecord[];
+  codes: Map<string, string>;
+  kind: 'sire' | 'dam' | 'offspring';
+  emptyLabel: string;
+}) {
+  const t = useT();
+  const [expanded, setExpanded] = useState(false);
+  const visible = expanded ? fowls : fowls.slice(0, 6);
+  const remaining = fowls.length - visible.length;
+
+  if (fowls.length === 0) {
+    return <p className="text-xs font-semibold break-words opacity-80">{emptyLabel}</p>;
+  }
+
+  return (
+    <div className="flex min-w-0 flex-wrap gap-1.5">
+      {visible.map((fowl) => {
+        const code = formatBirdCodeForDisplay(codeOf(fowl, codes));
+        return (
+          <span
+            key={fowl.id}
+            title={`${fowl.name}${code ? ` (${code})` : ''}`}
+            className="border-current bg-background/70 inline-flex min-h-8 min-w-0 max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold"
+          >
+            {kind === 'sire' && <Mars className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
+            {kind === 'dam' && <Venus className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
+            <span className="min-w-0 break-words">{kind === 'offspring' ? code : fowl.name}</span>
+            {kind !== 'offspring' && code && (
+              <span className="shrink-0 font-mono text-[10px] font-black opacity-75">{code}</span>
+            )}
+          </span>
+        );
+      })}
+      {remaining > 0 && (
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="bg-background/80 hover:bg-background inline-flex min-h-11 cursor-pointer items-center rounded-full border border-current px-3 text-xs font-black transition-colors focus-visible:ring-2 focus-visible:ring-current focus-visible:outline-none"
+        >
+          {t('hub.moreCount', { count: remaining })}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function CodingSystemExplainer({
   fowls,
   codes,
@@ -150,6 +202,7 @@ function CodingSystemExplainer({
   fowls: FowlRecord[];
   codes: Map<string, string>;
 }) {
+  const t = useT();
   const sires = fowls
     .filter(isSireGender)
     .filter((f) => classifyBirdCode(codeOf(f, codes)) === 'sire');
@@ -157,229 +210,149 @@ function CodingSystemExplainer({
     .filter((f) => isFemale(f.gender))
     .filter((f) => classifyBirdCode(codeOf(f, codes)) === 'dam');
   const offspring = fowls.filter((f) => classifyBirdCode(codeOf(f, codes)) === 'offspring');
+  const offspringExample1 = `${offspringBase('1', 'A')}1`;
+  const offspringExample2 = `${offspringBase('1', 'A')}2`;
+  const offspringExample3 = `${offspringBase('2', 'B')}1`;
 
   return (
-    <div className="bg-card border-border overflow-hidden rounded-3xl border shadow-sm">
-      <div className="border-border border-b px-6 pt-6 pb-4">
-        <div className="mb-1 flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-violet-200 bg-violet-100 dark:border-violet-800 dark:bg-violet-950/50">
-            <Hash className="h-5 w-5 text-violet-700 dark:text-violet-400" />
+    <div className="bg-card border-border min-w-0 overflow-hidden rounded-3xl border shadow-sm">
+      <div className="border-border border-b px-5 pt-5 pb-4 sm:px-6 sm:pt-6">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="bg-sidebar text-sidebar-foreground flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
+            <Hash className="h-5 w-5" aria-hidden="true" />
           </div>
-          <div>
-            <h2 className="text-card-foreground text-sm font-black">Coding System</h2>
-            <p className="text-muted-foreground text-xs font-semibold">
-              Standardized tagging scheme for every chicken
+          <div className="min-w-0">
+            <h3 className="text-card-foreground text-sm font-black break-words">
+              Coding System
+            </h3>
+            <p className="text-muted-foreground text-xs font-semibold break-words">
+              {t('hub.codingCardSubtitle')}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-3">
-        {/* Sire */}
-        <div className="space-y-3 rounded-2xl border border-sky-200 bg-sky-50 p-4 dark:border-sky-800 dark:bg-sky-950/30">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-600">
-              <Hash className="h-4 w-4 text-white" />
-            </div>
-            <div>
-              <p className="text-xs font-black text-sky-700 dark:text-sky-400">SIRE</p>
-              <p className="text-xs font-semibold text-sky-600/70 dark:text-sky-500">
-                Male chicken
-              </p>
+      <div className="grid min-w-0 grid-cols-1 gap-4 p-4 sm:p-6 lg:grid-cols-3">
+        <section className="bg-cock-bg text-cock min-w-0 space-y-3 rounded-2xl border border-cock/30 p-4 [overflow-wrap:anywhere]">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="bg-background/80 flex h-9 w-9 shrink-0 items-center justify-center rounded-full">
+              <Mars className="h-4 w-4" aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs font-black tracking-widest uppercase">{t('hub.codeTypeSire')}</p>
+              <p className="text-xs font-semibold">{t('hub.sireSubtitle')}</p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {['1', '2', '3', '4', '5'].map((n) => (
-              <span
-                key={n}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-600 text-xs font-black text-white shadow-sm"
-              >
+              <span key={n} className="bg-cock text-background flex h-8 w-8 items-center justify-center rounded-lg text-xs font-black shadow-sm">
                 {n}
               </span>
             ))}
-            <span className="text-xs font-black text-sky-600 dark:text-sky-400">···</span>
+            <span className="text-xs font-black">...</span>
           </div>
-          <p className="text-xs font-semibold text-sky-700 dark:text-sky-400">
-            <strong>Numbers</strong> are used to identify sires
+          <p className="text-xs font-semibold">
+            <strong>{t('hub.sireHelper')}</strong>
           </p>
-          {sires.length > 0 && (
-            <div className="border-t border-sky-200 pt-2 dark:border-sky-800">
-              <p className="mb-1.5 text-xs font-black tracking-widest text-sky-600 uppercase dark:text-sky-400">
-                On your farm:
-              </p>
-              <div className="flex flex-wrap gap-1">
-                {sires.slice(0, 6).map((f) => (
-                  <span
-                    key={f.id}
-                    className="rounded-md border border-sky-200 bg-sky-100 px-1.5 py-0.5 text-xs font-black text-sky-700 dark:border-sky-800 dark:bg-sky-900/40 dark:text-sky-400"
-                  >
-                    {formatBirdCodeForDisplay(codes.get(String(f.id)) || f.bird_code || '')} ·{' '}
-                    {f.name.length > 8 ? f.name.slice(0, 8) + '…' : f.name}
-                  </span>
-                ))}
-                {sires.length > 6 && (
-                  <span className="text-xs font-bold text-sky-500">+{sires.length - 6} more</span>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
+          <div className="border-t border-current pt-3">
+            <p className="mb-2 text-xs font-black tracking-widest uppercase">{t('hub.onYourFarm')}</p>
+            <FarmCodeChips fowls={sires} codes={codes} kind="sire" emptyLabel={t('hub.noCodedCocks')} />
+          </div>
+        </section>
 
-        {/* Dam */}
-        <div className="space-y-3 rounded-2xl border border-pink-200 bg-pink-50 p-4 dark:border-pink-800 dark:bg-pink-950/30">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-pink-600">
-              <Type className="h-4 w-4 text-white" />
-            </div>
-            <div>
-              <p className="text-xs font-black text-pink-700 dark:text-pink-400">DAM</p>
-              <p className="text-xs font-semibold text-pink-600/70 dark:text-pink-500">
-                Female chicken
-              </p>
+        <section className="bg-hen-bg text-hen min-w-0 space-y-3 rounded-2xl border border-hen/30 p-4 [overflow-wrap:anywhere]">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="bg-background/80 flex h-9 w-9 shrink-0 items-center justify-center rounded-full">
+              <Venus className="h-4 w-4" aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs font-black tracking-widest uppercase">{t('hub.codeTypeDam')}</p>
+              <p className="text-xs font-semibold">{t('hub.damSubtitle')}</p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            {['A', 'B', 'C', 'D', 'E'].map((l) => (
-              <span
-                key={l}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-pink-600 text-xs font-black text-white shadow-sm"
-              >
-                {l}
+            {['A', 'B', 'C', 'D', 'E'].map((letter) => (
+              <span key={letter} className="bg-hen text-background flex h-8 w-8 items-center justify-center rounded-lg text-xs font-black shadow-sm">
+                {letter}
               </span>
             ))}
-            <span className="text-xs font-black text-pink-600 dark:text-pink-400">···</span>
+            <span className="text-xs font-black">...</span>
           </div>
-          <p className="text-xs font-semibold text-pink-700 dark:text-pink-400">
-            <strong>Letters</strong> are used to identify dams
+          <p className="text-xs font-semibold">
+            <strong>{t('hub.damHelper')}</strong>
           </p>
-          {dams.length > 0 && (
-            <div className="border-t border-pink-200 pt-2 dark:border-pink-800">
-              <p className="mb-1.5 text-xs font-black tracking-widest text-pink-600 uppercase dark:text-pink-400">
-                On your farm:
-              </p>
-              <div className="flex flex-wrap gap-1">
-                {dams.slice(0, 6).map((f) => (
-                  <span
-                    key={f.id}
-                    className="rounded-md border border-pink-200 bg-pink-100 px-1.5 py-0.5 text-xs font-black text-pink-700 dark:border-pink-800 dark:bg-pink-900/40 dark:text-pink-400"
-                  >
-                    {formatBirdCodeForDisplay(codes.get(String(f.id)) || f.bird_code || '')} ·{' '}
-                    {f.name.length > 8 ? f.name.slice(0, 8) + '…' : f.name}
-                  </span>
-                ))}
-                {dams.length > 6 && (
-                  <span className="text-xs font-bold text-pink-500">+{dams.length - 6} more</span>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
+          <div className="border-t border-current pt-3">
+            <p className="mb-2 text-xs font-black tracking-widest uppercase">{t('hub.onYourFarm')}</p>
+            <FarmCodeChips fowls={dams} codes={codes} kind="dam" emptyLabel={t('hub.noCodedDams')} />
+          </div>
+        </section>
 
-        {/* Offspring */}
-        <div className="space-y-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-800 dark:bg-emerald-950/30">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600">
-              <Combine className="h-4 w-4 text-white" />
-            </div>
-            <div>
-              <p className="text-xs font-black text-emerald-700 dark:text-emerald-400">OFFSPRING</p>
-              <p className="text-xs font-semibold text-emerald-600/70 dark:text-emerald-500">
-                Sire + Dam combined
+        <section className="bg-win-bg text-success min-w-0 space-y-3 rounded-2xl border border-success/30 p-4 [overflow-wrap:anywhere]">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="bg-background/80 flex h-9 w-9 shrink-0 items-center justify-center rounded-full">
+              <Combine className="h-4 w-4" aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs font-black tracking-widest uppercase">
+                {t('hub.codeTypeOffspring')}
               </p>
+              <p className="text-xs font-semibold">{t('hub.offspringSubtitle')}</p>
             </div>
           </div>
           <div className="space-y-1.5">
-            {[
-              { code: '1A₁', label: 'Sire 1 × Dam A · 1st' },
-              { code: '1A₂', label: 'Sire 1 × Dam A · 2nd' },
-              { code: '2B₁', label: 'Sire 2 × Dam B · 1st' },
-            ].map((ex) => (
-              <div key={ex.code} className="flex items-center gap-2">
-                <span className="w-10 font-mono text-sm font-black text-emerald-700 dark:text-emerald-400">
-                  {ex.code}
+            {([
+              { code: offspringExample1, key: 'hub.exampleLineFirst', sire: '1', dam: 'A' },
+              { code: offspringExample2, key: 'hub.exampleLineSecond', sire: '1', dam: 'A' },
+              { code: offspringExample3, key: 'hub.exampleLineThird', sire: '2', dam: 'B' },
+            ] as const).map((example) => (
+              <div key={example.code} className="flex min-w-0 items-start gap-2">
+                <span className="w-12 shrink-0 font-mono text-sm font-black">{example.code}</span>
+                <span className="text-xs font-semibold break-words">
+                  {t(example.key, { sire: example.sire, dam: example.dam })}
                 </span>
-                <span className="text-muted-foreground text-xs">{ex.label}</span>
               </div>
             ))}
           </div>
-          {offspring.length > 0 && (
-            <div className="border-t border-emerald-200 pt-2 dark:border-emerald-800">
-              <p className="mb-1.5 text-xs font-black tracking-widest text-emerald-600 uppercase dark:text-emerald-400">
-                On your farm:
-              </p>
-              <div className="flex flex-wrap gap-1">
-                {offspring.slice(0, 6).map((f) => (
-                  <span
-                    key={f.id}
-                    className="rounded-md border border-emerald-200 bg-emerald-100 px-1.5 py-0.5 text-xs font-black text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400"
-                  >
-                    {formatBirdCodeForDisplay(codes.get(String(f.id)) || f.bird_code || '')}
-                  </span>
-                ))}
-                {offspring.length > 6 && (
-                  <span className="text-xs font-bold text-emerald-500">
-                    +{offspring.length - 6} more
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
+          <div className="border-t border-current pt-3">
+            <p className="mb-2 text-xs font-black tracking-widest uppercase">{t('hub.onYourFarm')}</p>
+            <FarmCodeChips fowls={offspring} codes={codes} kind="offspring" emptyLabel={t('hub.noCodedOffspring')} />
+          </div>
+        </section>
       </div>
 
-      {/* Example diagram */}
-      <div className="bg-muted/40 border-border mx-6 mb-6 rounded-2xl border p-4">
+      <div className="bg-muted/40 border-border mx-4 mb-4 rounded-2xl border p-4 sm:mx-6 sm:mb-6">
         <p className="text-muted-foreground mb-3 text-xs font-black tracking-widest uppercase">
-          Pairing Example
+          {t('hub.pairingExampleTitle')}
         </p>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
-            <div className="rounded-xl border border-sky-200 bg-sky-100 px-3 py-2 text-center dark:border-sky-800 dark:bg-sky-950/50">
-              <p className="text-xs font-black tracking-widest text-sky-600 uppercase dark:text-sky-400">
-                Sire
-              </p>
-              <p className="font-mono text-base font-black text-sky-700 dark:text-sky-300">1</p>
-              <p className="text-muted-foreground text-xs">Lemon 84</p>
-            </div>
-            <span className="text-muted-foreground font-black">×</span>
-            <div className="rounded-xl border border-pink-200 bg-pink-100 px-3 py-2 text-center dark:border-pink-800 dark:bg-pink-950/50">
-              <p className="text-xs font-black tracking-widest text-pink-600 uppercase dark:text-pink-400">
-                Dam
-              </p>
-              <p className="font-mono text-base font-black text-pink-700 dark:text-pink-300">A</p>
-              <p className="text-muted-foreground text-xs">Ground Red</p>
-            </div>
-            <span className="text-muted-foreground font-black">→</span>
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <div className="bg-cock-bg text-cock min-w-24 rounded-xl border border-cock/30 px-3 py-2 text-center">
+            <p className="text-xs font-black tracking-widest uppercase">{t('hub.codeTypeSire')}</p>
+            <p className="font-mono text-base font-black">1</p>
           </div>
-          <div className="flex gap-2">
-            {['1A₁', '1A₂', '1A₃'].map((code, i) => (
-              <div
-                key={code}
-                className="rounded-xl border border-emerald-200 bg-emerald-100 px-3 py-2 text-center dark:border-emerald-800 dark:bg-emerald-950/50"
-              >
-                <p className="text-xs font-black tracking-widest text-emerald-600 uppercase dark:text-emerald-400">
-                  Offspring {i + 1}
-                </p>
-                <p className="font-mono text-base font-black text-emerald-700 dark:text-emerald-300">
-                  {code}
-                </p>
-              </div>
-            ))}
-            <div className="flex items-center">
-              <span className="text-muted-foreground text-xs font-bold">···</span>
-            </div>
+          <span className="text-muted-foreground font-black">x</span>
+          <div className="bg-hen-bg text-hen min-w-24 rounded-xl border border-hen/30 px-3 py-2 text-center">
+            <p className="text-xs font-black tracking-widest uppercase">{t('hub.codeTypeDam')}</p>
+            <p className="font-mono text-base font-black">A</p>
           </div>
+          <span className="text-muted-foreground font-black">-&gt;</span>
+          {[offspringExample1, offspringExample2, `${offspringBase('1', 'A')}3`].map((code, index) => (
+            <div key={code} className="bg-win-bg text-success min-w-28 rounded-xl border border-success/30 px-3 py-2 text-center">
+              <p className="text-xs font-black tracking-widest uppercase">
+                {t('hub.offspringNumber', { number: index + 1 })}
+              </p>
+              <p className="font-mono text-base font-black">{code}</p>
+            </div>
+          ))}
         </div>
-        <p className="text-muted-foreground mt-3 text-xs font-semibold">
-           You may also add a descriptive name:{' '}
-          <strong className="text-card-foreground">Lemon Ground Red · 1A₁</strong>
+        <p className="text-muted-foreground mt-3 text-xs font-semibold break-words">
+          {t('hub.exampleNote', { name: `Lemon Ground Red - ${offspringExample1}` })}
         </p>
       </div>
     </div>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // BREEDING PAIR CARD
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -452,23 +425,23 @@ function BreedingPairCard({
       <div className="p-4 sm:p-5">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="border-border flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-gradient-to-br from-sky-100 to-pink-100 dark:from-sky-950/50 dark:to-pink-950/50">
-              <Heart className="h-5 w-5 text-rose-500" />
+            <div className="border-border flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-gradient-to-br from-cock-bg to-hen-bg dark:from-cock-bg dark:to-hen-bg">
+              <Heart className="h-5 w-5 text-danger" />
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-card-foreground text-sm font-black">
-                  <span className="font-mono text-sky-600 dark:text-sky-400">{pair.sire_code}</span>
+                  <span className="font-mono text-cock dark:text-cock">{pair.sire_code}</span>
                   <span className="text-muted-foreground mx-1">×</span>
-                  <span className="font-mono text-pink-600 dark:text-pink-400">
+                  <span className="font-mono text-hen dark:text-hen">
                     {pair.dam_code}
                   </span>
                 </h3>
-                <span className="rounded-md border border-violet-200 bg-violet-100 px-1.5 py-0.5 font-mono text-xs font-black text-violet-700 dark:border-violet-800 dark:bg-violet-950/50 dark:text-violet-400">
+                <span className="rounded-md border border-accent/30 bg-accent-soft px-1.5 py-0.5 font-mono text-xs font-black text-primary dark:border-accent/30 dark:bg-accent-soft dark:text-primary">
                   → {offspringBaseCode}₁, {offspringBaseCode}₂···
                 </span>
               </div>
-              <p className="text-muted-foreground truncate text-xs font-semibold">
+              <p className="text-muted-foreground break-words text-xs font-semibold">
                 {pair.sire_name} × {pair.dam_name}
               </p>
             </div>
@@ -487,7 +460,7 @@ function BreedingPairCard({
             <button
               type="button"
               onClick={onRemove}
-              className="text-muted-foreground flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-950/30"
+              className="text-muted-foreground flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-loss-bg hover:text-danger dark:hover:bg-loss-bg"
               aria-label="Remove pairing"
             >
               <X className="h-3.5 w-3.5" />
@@ -505,7 +478,7 @@ function BreedingPairCard({
           </div>
           <div className="bg-muted/40 rounded-xl p-3 text-center">
             <p
-              className={`text-lg font-black ${(combinedWinRate ?? 0) >= 50 ? 'text-emerald-600 dark:text-emerald-400' : totalDecided > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-muted-foreground'}`}
+              className={`text-lg font-black ${(combinedWinRate ?? 0) >= 50 ? 'text-success dark:text-success' : totalDecided > 0 ? 'text-danger dark:text-danger' : 'text-muted-foreground'}`}
             >
               {totalDecided > 0 ? `${combinedWinRate}%` : '—'}
             </p>
@@ -529,30 +502,30 @@ function BreedingPairCard({
             type="button"
             onClick={() => sire && setSelectedFowlForDetails(sire)}
             disabled={!sire}
-            className="cursor-pointer rounded-xl border border-sky-200 bg-sky-50 p-2.5 text-left transition-colors hover:bg-sky-100 disabled:cursor-default dark:border-sky-800 dark:bg-sky-950/30 dark:hover:bg-sky-950/50"
+            className="cursor-pointer rounded-xl border border-cock/30 bg-cock-bg p-2.5 text-left transition-colors hover:bg-cock-bg disabled:cursor-default dark:border-cock/30 dark:bg-cock-bg dark:hover:bg-cock-bg"
           >
-            <p className="text-xs font-black tracking-widest text-sky-600 uppercase dark:text-sky-400">
+            <p className="text-xs font-black tracking-widest text-cock uppercase dark:text-cock">
                Sire
             </p>
-            <p className="text-card-foreground truncate text-xs font-black">{pair.sire_name}</p>
+            <p className="text-card-foreground break-words text-xs font-black">{pair.sire_name}</p>
             <p className="text-muted-foreground text-xs font-semibold">
               {sire?.breed || '—'} · Code:{' '}
-              <span className="font-mono text-sky-600 dark:text-sky-400">{pair.sire_code}</span>
+              <span className="font-mono text-cock dark:text-cock">{pair.sire_code}</span>
             </p>
           </button>
           <button
             type="button"
             onClick={() => dam && setSelectedFowlForDetails(dam)}
             disabled={!dam}
-            className="cursor-pointer rounded-xl border border-pink-200 bg-pink-50 p-2.5 text-left transition-colors hover:bg-pink-100 disabled:cursor-default dark:border-pink-800 dark:bg-pink-950/30 dark:hover:bg-pink-950/50"
+            className="cursor-pointer rounded-xl border border-hen/30 bg-hen-bg p-2.5 text-left transition-colors hover:bg-hen-bg disabled:cursor-default dark:border-hen/30 dark:bg-hen-bg dark:hover:bg-hen-bg"
           >
-            <p className="text-xs font-black tracking-widest text-pink-600 uppercase dark:text-pink-400">
+            <p className="text-xs font-black tracking-widest text-hen uppercase dark:text-hen">
                Dam
             </p>
-            <p className="text-card-foreground truncate text-xs font-black">{pair.dam_name}</p>
+            <p className="text-card-foreground break-words text-xs font-black">{pair.dam_name}</p>
             <p className="text-muted-foreground text-xs font-semibold">
               {dam?.breed || '—'} · Code:{' '}
-              <span className="font-mono text-pink-600 dark:text-pink-400">{pair.dam_code}</span>
+              <span className="font-mono text-hen dark:text-hen">{pair.dam_code}</span>
             </p>
           </button>
         </div>
@@ -583,17 +556,17 @@ function BreedingPairCard({
                   key={fowl.id}
                   type="button"
                   onClick={() => setSelectedFowlForDetails(fowl)}
-                  className="group bg-muted/30 border-border flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border px-3 py-2 transition-all hover:border-emerald-300 hover:bg-emerald-50 dark:hover:border-emerald-700 dark:hover:bg-emerald-950/30"
+                  className="group bg-muted/30 border-border flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border px-3 py-2 transition-all hover:border-success/30 hover:bg-win-bg dark:hover:border-success/30 dark:hover:bg-win-bg"
                 >
                   <div className="flex min-w-0 items-center gap-2">
                     <span className="text-muted-foreground bg-card border-border shrink-0 rounded-md border px-1.5 py-0.5 font-mono text-xs font-black">
                       {formatBirdCodeForDisplay(code)}
                     </span>
                     <div className="min-w-0">
-                      <p className="text-card-foreground truncate text-xs font-black group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
+                      <p className="text-card-foreground break-words text-xs font-black group-hover:text-success dark:group-hover:text-success">
                         {fowl.name}
                       </p>
-                      <p className="text-muted-foreground truncate text-xs font-semibold">
+                      <p className="text-muted-foreground break-words text-xs font-semibold">
                         {sexLabel(fowl)} · {fowl.breed}
                       </p>
                     </div>
@@ -601,7 +574,7 @@ function BreedingPairCard({
                   {canFight(fowl) &&
                     (total > 0 ? (
                       <span
-                        className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-black ${(winRate ?? 0) >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
+                        className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-black ${(winRate ?? 0) >= 50 ? 'border-success/30 bg-win-bg text-success dark:border-success/30 dark:bg-win-bg dark:text-success' : 'border-danger/30 bg-loss-bg text-danger dark:border-danger/30 dark:bg-loss-bg dark:text-danger'}`}
                       >
                         {winRate === null ? '—%' : `${winRate}%`} · {wins}W-{losses}L
                         {draws > 0 ? `-${draws}D` : ''}
@@ -633,7 +606,7 @@ function BreedingPairCard({
             id={`pair-outcome-${pair.id}`}
             value={pair.outcome}
             onChange={(e) => onOutcomeChange(e.target.value as PairingOutcome)}
-            className={`bg-card cursor-pointer rounded-full border px-2 py-1 text-xs font-black focus:ring-2 focus:ring-emerald-500/40 focus:outline-none ${outCfg.bg} ${outCfg.text} ${outCfg.border}`}
+            className={`bg-card cursor-pointer rounded-full border px-2 py-1 text-xs font-black focus:ring-2 focus:ring-success/40 focus:outline-none ${outCfg.bg} ${outCfg.text} ${outCfg.border}`}
           >
             {PAIRING_OUTCOMES.map((option) => (
               <option key={option} value={option}>
@@ -641,7 +614,7 @@ function BreedingPairCard({
               </option>
             ))}
           </select>
-          <span className="font-mono text-xs font-black text-violet-600 dark:text-violet-400">
+          <span className="font-mono text-xs font-black text-primary dark:text-primary">
             Base Code: {offspringBaseCode}
           </span>
         </div>
@@ -762,11 +735,11 @@ function AddPairingForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-card space-y-4 rounded-2xl border border-emerald-200 p-5 shadow-sm dark:border-emerald-800"
+      className="bg-card space-y-4 rounded-2xl border border-success/30 p-5 shadow-sm dark:border-success/30"
     >
       <div className="mb-4 flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600">
-          <Plus className="h-4 w-4 text-white" />
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+          <Plus className="h-4 w-4 text-primary-foreground" />
         </div>
         <h3 className="text-card-foreground text-sm font-black">Record a New Pairing</h3>
       </div>
@@ -775,7 +748,7 @@ function AddPairingForm({
         <div className="space-y-1">
           <label
             htmlFor="pair-sire"
-            className="text-xs font-black tracking-widest text-sky-600 uppercase dark:text-sky-400"
+            className="text-xs font-black tracking-widest text-cock uppercase dark:text-cock"
           >
              Sire
           </label>
@@ -784,7 +757,7 @@ function AddPairingForm({
             value={sireId}
             onChange={(e) => setSireId(e.target.value)}
             required
-            className="border-border bg-card text-card-foreground w-full cursor-pointer rounded-xl border px-3 py-2.5 text-xs font-bold transition-all outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:focus:ring-emerald-900/30"
+            className="border-border bg-card text-card-foreground w-full cursor-pointer rounded-xl border px-3 py-2.5 text-xs font-bold transition-all outline-none focus:border-success/30 focus:ring-2 focus:ring-success/40 dark:focus:ring-success/40"
           >
             <option value="">Select a sire...</option>
             {males.map((f) => (
@@ -797,7 +770,7 @@ function AddPairingForm({
         <div className="space-y-1">
           <label
             htmlFor="pair-dam"
-            className="text-xs font-black tracking-widest text-pink-600 uppercase dark:text-pink-400"
+            className="text-xs font-black tracking-widest text-hen uppercase dark:text-hen"
           >
              Dam
           </label>
@@ -806,7 +779,7 @@ function AddPairingForm({
             value={damId}
             onChange={(e) => setDamId(e.target.value)}
             required
-            className="border-border bg-card text-card-foreground w-full cursor-pointer rounded-xl border px-3 py-2.5 text-xs font-bold transition-all outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:focus:ring-emerald-900/30"
+            className="border-border bg-card text-card-foreground w-full cursor-pointer rounded-xl border px-3 py-2.5 text-xs font-bold transition-all outline-none focus:border-success/30 focus:ring-2 focus:ring-success/40 dark:focus:ring-success/40"
           >
             <option value="">Select a dam...</option>
             {females.map((f) => (
@@ -819,15 +792,15 @@ function AddPairingForm({
       </div>
 
       {conflict?.kind === 'occupied' && (
-        <div className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-800 dark:bg-rose-950/40">
-          <span className="mt-0.5 shrink-0 text-rose-600 dark:text-rose-400">
+        <div className="flex items-start gap-2.5 rounded-xl border border-danger/30 bg-loss-bg p-3 dark:border-danger/30 dark:bg-loss-bg">
+          <span className="mt-0.5 shrink-0 text-danger dark:text-danger">
             <AlertTriangle className="h-4 w-4" aria-hidden="true" />
           </span>
           <div>
-            <p className="text-xs font-black tracking-widest text-rose-600 uppercase dark:text-rose-400">
+            <p className="text-xs font-black tracking-widest text-danger uppercase dark:text-danger">
               Already Has an Active Partner
             </p>
-            <p className="text-xs font-semibold text-rose-700 dark:text-rose-300">
+            <p className="text-xs font-semibold text-danger dark:text-danger">
               {conflict.bird === 'sire' ? selectedSire?.name : selectedDam?.name} is currently
               paired with {conflict.partnerName} (pairing{' '}
               {conflict.pairing.pairing_code || `#${conflict.pairing.id}`}). Set that pairing to
@@ -838,15 +811,15 @@ function AddPairingForm({
       )}
 
       {conflict?.kind === 'couple' && (
-        <div className="flex items-start gap-2.5 rounded-xl border border-sky-200 bg-sky-50 p-3 dark:border-sky-800 dark:bg-sky-950/40">
-          <span className="mt-0.5 shrink-0 text-sky-600 dark:text-sky-400">
+        <div className="flex items-start gap-2.5 rounded-xl border border-cock/30 bg-cock-bg p-3 dark:border-cock/30 dark:bg-cock-bg">
+          <span className="mt-0.5 shrink-0 text-cock dark:text-cock">
             <Info className="h-4 w-4" aria-hidden="true" />
           </span>
           <div>
-            <p className="text-xs font-black tracking-widest text-sky-600 uppercase dark:text-sky-400">
+            <p className="text-xs font-black tracking-widest text-cock uppercase dark:text-cock">
               This Pairing Is Already Recorded
             </p>
-            <p className="text-xs font-semibold text-sky-700 dark:text-sky-300">
+            <p className="text-xs font-semibold text-cock dark:text-cock">
               {conflict.pairing.sire_name || 'Sire'} × {conflict.pairing.dam_name || 'Dam'} — code{' '}
               {conflict.pairing.pairing_code || `#${conflict.pairing.id}`}, status{' '}
               {conflict.pairing.outcome}. Submitting will update the existing record; no duplicate
@@ -858,9 +831,9 @@ function AddPairingForm({
 
       {/* Live Preview: Breed mix + Relatedness */}
       {selectedSire && selectedDam && (
-        <div className="dark:bg-card/70 border-border space-y-3 rounded-xl border bg-slate-50 p-3.5">
+        <div className="dark:bg-card/70 border-border space-y-3 rounded-xl border bg-muted p-3.5">
           <div className="flex items-center gap-2">
-            <Dna className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <Dna className="h-4 w-4 text-success dark:text-success" />
             <p className="text-card-foreground text-xs font-black tracking-widest uppercase">
               Offspring & Lineage Live Preview
             </p>
@@ -922,33 +895,33 @@ function AddPairingForm({
 
           {/* Close Breeding Warning + Confirmation */}
           {relatedness?.isCloseBreeding && (
-            <div className="space-y-2.5 rounded-xl border border-amber-300 bg-amber-50 p-3.5 dark:border-amber-700/60 dark:bg-amber-950/40">
+            <div className="space-y-2.5 rounded-xl border border-warning/30 bg-low-sample-bg p-3.5 dark:border-warning/30 dark:bg-low-sample-bg">
               <div className="flex items-start gap-2.5">
-                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning dark:text-warning" />
                 <div className="min-w-0 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-xs font-black tracking-widest text-amber-800 uppercase dark:text-amber-300">
+                    <p className="text-xs font-black tracking-widest text-warning uppercase dark:text-warning">
                       Close Breeding Warning
                     </p>
-                    <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                    <span className="text-xs font-semibold text-warning dark:text-warning">
                       ({relatedness.secondaryLabel})
                     </span>
                   </div>
-                  <p className="text-xs font-semibold text-amber-900 dark:text-amber-200">
+                  <p className="text-xs font-semibold text-warning dark:text-warning">
                     {relatedness.relationship}. Inbreeding can amplify undesirable recessive traits
                     and reduce vitality.
                   </p>
                 </div>
               </div>
-              <label className="flex cursor-pointer items-center gap-2.5 border-t border-amber-200 pt-1.5 dark:border-amber-800/60">
+              <label className="flex cursor-pointer items-center gap-2.5 border-t border-warning/30 pt-1.5 dark:border-warning/30">
                 <input
                   id="confirm-close-breeding"
                   type="checkbox"
                   checked={confirmCloseBreeding}
                   onChange={(e) => setConfirmCloseBreeding(e.target.checked)}
-                  className="h-4 w-4 cursor-pointer rounded border-amber-400 text-amber-600 focus:ring-amber-500"
+                  className="h-4 w-4 cursor-pointer rounded border-warning/30 text-warning focus:ring-warning/40"
                 />
-                <span className="text-xs font-bold text-amber-900 select-none dark:text-amber-200">
+                <span className="text-xs font-bold text-warning select-none dark:text-warning">
                   I understand the risks of close breeding and confirm this pairing
                 </span>
               </label>
@@ -958,18 +931,18 @@ function AddPairingForm({
       )}
 
       {previewCode && (
-        <div className="flex items-center gap-3 rounded-xl border border-violet-200 bg-violet-50 p-3 dark:border-violet-800 dark:bg-violet-950/30">
-          <Combine className="h-4 w-4 shrink-0 text-violet-600 dark:text-violet-400" />
+        <div className="flex items-center gap-3 rounded-xl border border-accent/30 bg-accent-soft p-3 dark:border-accent/30 dark:bg-accent-soft">
+          <Combine className="h-4 w-4 shrink-0 text-primary dark:text-primary" />
           <div>
-            <p className="text-xs font-black tracking-widest text-violet-600 uppercase dark:text-violet-400">
+            <p className="text-xs font-black tracking-widest text-primary uppercase dark:text-primary">
               Offspring Code Preview
             </p>
             <p className="text-card-foreground font-mono text-sm font-black">
               {previewCode}₁, {previewCode}₂, {previewCode}₃···
             </p>
             <p className="text-muted-foreground text-xs">
-              Sire <span className="font-mono text-sky-600 dark:text-sky-400">{sireCode}</span> +
-              Dam <span className="font-mono text-pink-600 dark:text-pink-400">{damCode}</span>
+              Sire <span className="font-mono text-cock dark:text-cock">{sireCode}</span> +
+              Dam <span className="font-mono text-hen dark:text-hen">{damCode}</span>
             </p>
           </div>
         </div>
@@ -988,7 +961,7 @@ function AddPairingForm({
             type="date"
             value={pairingDate}
             onChange={(e) => setPairingDate(e.target.value)}
-            className="border-border bg-card text-card-foreground w-full rounded-xl border px-3 py-2.5 text-xs font-bold transition-all outline-none focus:border-emerald-500"
+            className="border-border bg-card text-card-foreground w-full rounded-xl border px-3 py-2.5 text-xs font-bold transition-all outline-none focus:border-success/30"
           />
         </div>
         <div className="space-y-1">
@@ -1002,7 +975,7 @@ function AddPairingForm({
             id="pair-status"
             value={outcome}
             onChange={(e) => setOutcome(e.target.value as typeof outcome)}
-            className="border-border bg-card text-card-foreground w-full cursor-pointer rounded-xl border px-3 py-2.5 text-xs font-bold transition-all outline-none focus:border-emerald-500"
+            className="border-border bg-card text-card-foreground w-full cursor-pointer rounded-xl border px-3 py-2.5 text-xs font-bold transition-all outline-none focus:border-success/30"
           >
             <option value="Active">Active</option>
             <option value="Completed">Completed</option>
@@ -1024,12 +997,12 @@ function AddPairingForm({
           onChange={(e) => setNotes(e.target.value)}
           rows={2}
           placeholder="e.g. Strong bloodline combination, promising offspring..."
-          className="border-border bg-card text-card-foreground placeholder:text-muted-foreground/50 w-full resize-none rounded-xl border px-3 py-2.5 text-xs font-semibold transition-all outline-none focus:border-emerald-500"
+          className="border-border bg-card text-card-foreground placeholder:text-muted-foreground/50 w-full resize-none rounded-xl border px-3 py-2.5 text-xs font-semibold transition-all outline-none focus:border-success/30"
         />
       </div>
 
       {error && (
-        <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-black text-rose-600 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-400">
+        <p className="rounded-xl border border-danger/30 bg-loss-bg px-3 py-2 text-xs font-black text-danger dark:border-danger/30 dark:bg-loss-bg dark:text-danger">
           {error}
         </p>
       )}
@@ -1043,7 +1016,7 @@ function AddPairingForm({
             conflict?.kind === 'occupied' ||
             (relatedness?.isCloseBreeding && !confirmCloseBreeding)
           }
-          className="flex-1 cursor-pointer rounded-xl bg-emerald-600 py-2.5 text-xs font-black text-white transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex-1 cursor-pointer rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 min-h-11 py-2.5 text-xs font-black transition-all disabled:cursor-not-allowed disabled:opacity-50"
         >
           {relatedness?.isCloseBreeding && !confirmCloseBreeding
             ? 'Confirm Close Breeding to Save'
@@ -1052,7 +1025,7 @@ function AddPairingForm({
         <button
           type="button"
           onClick={onCancel}
-          className="bg-muted text-muted-foreground hover:bg-muted/80 cursor-pointer rounded-xl px-5 py-2.5 text-xs font-black transition-all"
+          className="bg-muted text-muted-foreground hover:bg-muted/80 min-h-11 cursor-pointer rounded-xl px-5 py-2.5 text-xs font-black transition-all"
         >
           Cancel
         </button>
@@ -1074,10 +1047,10 @@ function SafetyIncidentCard({
 }) {
   const cfg = SEVERITY_CONFIG[incident.severity];
   const statusColors: Record<string, string> = {
-    Treated: 'text-sky-600 dark:text-sky-400',
-    Monitoring: 'text-amber-600 dark:text-amber-400',
-    Recovered: 'text-emerald-600 dark:text-emerald-400',
-    Deceased: 'text-rose-600 dark:text-rose-400',
+    Treated: 'text-cock dark:text-cock',
+    Monitoring: 'text-warning dark:text-warning',
+    Recovered: 'text-success dark:text-success',
+    Deceased: 'text-danger dark:text-danger',
   };
 
   return (
@@ -1117,7 +1090,7 @@ function SafetyIncidentCard({
         <button
           type="button"
           onClick={onRemove}
-          className="text-muted-foreground flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-rose-50 hover:text-rose-500 focus-visible:ring-2 focus-visible:ring-rose-500/50 focus-visible:outline-none dark:hover:bg-rose-950/30"
+          className="text-muted-foreground flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-loss-bg hover:text-danger focus-visible:ring-2 focus-visible:ring-danger/40 focus-visible:outline-none dark:hover:bg-loss-bg"
           aria-label={`Dismiss ${incident.type} incident`}
         >
           <X className="h-3 w-3" />
@@ -1173,11 +1146,11 @@ function AddIncidentForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-card space-y-4 rounded-2xl border border-rose-200 p-5 shadow-sm dark:border-rose-800"
+      className="bg-card space-y-4 rounded-2xl border border-danger/30 p-5 shadow-sm dark:border-danger/30"
     >
       <div className="mb-4 flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-600">
-          <AlertTriangle className="h-4 w-4 text-white" />
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+          <AlertTriangle className="h-4 w-4 text-primary-foreground" />
         </div>
         <h3 className="text-card-foreground text-sm font-black">Record a Safety Incident</h3>
       </div>
@@ -1195,7 +1168,7 @@ function AddIncidentForm({
             value={fowlId}
             onChange={(e) => setFowlId(e.target.value)}
             required
-            className="border-border bg-card text-card-foreground w-full cursor-pointer rounded-xl border px-3 py-2.5 text-xs font-bold transition-all outline-none focus:border-rose-500"
+            className="border-border bg-card text-card-foreground w-full cursor-pointer rounded-xl border px-3 py-2.5 text-xs font-bold transition-all outline-none focus:border-danger/30"
           >
             <option value="">Select a chicken...</option>
             {fowls.map((f) => (
@@ -1217,7 +1190,7 @@ function AddIncidentForm({
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="border-border bg-card text-card-foreground w-full rounded-xl border px-3 py-2.5 text-xs font-bold transition-all outline-none focus:border-rose-500"
+            className="border-border bg-card text-card-foreground w-full rounded-xl border px-3 py-2.5 text-xs font-bold transition-all outline-none focus:border-danger/30"
           />
         </div>
       </div>
@@ -1234,7 +1207,7 @@ function AddIncidentForm({
             id="inc-type"
             value={type}
             onChange={(e) => setType(e.target.value as IncidentType)}
-            className="border-border bg-card text-card-foreground w-full cursor-pointer rounded-xl border px-3 py-2.5 text-xs font-bold transition-all outline-none focus:border-rose-500"
+            className="border-border bg-card text-card-foreground w-full cursor-pointer rounded-xl border px-3 py-2.5 text-xs font-bold transition-all outline-none focus:border-danger/30"
           >
             {INCIDENT_TYPES.map((t) => (
               <option key={t} value={t}>
@@ -1254,7 +1227,7 @@ function AddIncidentForm({
             id="inc-severity"
             value={severity}
             onChange={(e) => setSeverity(e.target.value as IncidentSeverity)}
-            className="border-border bg-card text-card-foreground w-full cursor-pointer rounded-xl border px-3 py-2.5 text-xs font-bold transition-all outline-none focus:border-rose-500"
+            className="border-border bg-card text-card-foreground w-full cursor-pointer rounded-xl border px-3 py-2.5 text-xs font-bold transition-all outline-none focus:border-danger/30"
           >
             {INCIDENT_SEVERITIES.map((s) => (
               <option key={s} value={s}>
@@ -1274,7 +1247,7 @@ function AddIncidentForm({
             id="inc-status"
             value={status}
             onChange={(e) => setStatus(e.target.value as IncidentStatus)}
-            className="border-border bg-card text-card-foreground w-full cursor-pointer rounded-xl border px-3 py-2.5 text-xs font-bold transition-all outline-none focus:border-rose-500"
+            className="border-border bg-card text-card-foreground w-full cursor-pointer rounded-xl border px-3 py-2.5 text-xs font-bold transition-all outline-none focus:border-danger/30"
           >
             {INCIDENT_STATUSES.map((s) => (
               <option key={s} value={s}>
@@ -1298,7 +1271,7 @@ function AddIncidentForm({
           onChange={(e) => setDescription(e.target.value)}
           rows={2}
           placeholder="e.g. Injured during handling, fever, etc..."
-          className="border-border bg-card text-card-foreground placeholder:text-muted-foreground/50 w-full resize-none rounded-xl border px-3 py-2.5 text-xs font-semibold transition-all outline-none focus:border-rose-500"
+          className="border-border bg-card text-card-foreground placeholder:text-muted-foreground/50 w-full resize-none rounded-xl border px-3 py-2.5 text-xs font-semibold transition-all outline-none focus:border-danger/30"
         />
       </div>
 
@@ -1306,14 +1279,14 @@ function AddIncidentForm({
         <button
           type="submit"
           disabled={!fowlId}
-          className="flex-1 cursor-pointer rounded-xl bg-rose-600 py-2.5 text-xs font-black text-white transition-all hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex-1 cursor-pointer rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 min-h-11 py-2.5 text-xs font-black transition-all disabled:cursor-not-allowed disabled:opacity-50"
         >
           Record Incident
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="bg-muted text-muted-foreground hover:bg-muted/80 cursor-pointer rounded-xl px-5 py-2.5 text-xs font-black transition-all"
+          className="bg-muted text-muted-foreground hover:bg-muted/80 min-h-11 cursor-pointer rounded-xl px-5 py-2.5 text-xs font-black transition-all"
         >
           Cancel
         </button>
@@ -1361,27 +1334,27 @@ function BirdIdentityCard({
 
   const codeColorMap = {
     sire: {
-      bg: 'bg-sky-100 dark:bg-sky-950/50',
-      text: 'text-sky-700 dark:text-sky-400',
-      border: 'border-sky-200 dark:border-sky-800',
+      bg: 'bg-cock-bg dark:bg-cock-bg',
+      text: 'text-cock dark:text-cock',
+      border: 'border-cock/30 dark:border-cock/30',
       label: 'SIRE',
     },
     dam: {
-      bg: 'bg-pink-100 dark:bg-pink-950/50',
-      text: 'text-pink-700 dark:text-pink-400',
-      border: 'border-pink-200 dark:border-pink-800',
+      bg: 'bg-hen-bg dark:bg-hen-bg',
+      text: 'text-hen dark:text-hen',
+      border: 'border-hen/30 dark:border-hen/30',
       label: 'DAM',
     },
     offspring: {
-      bg: 'bg-emerald-100 dark:bg-emerald-950/50',
-      text: 'text-emerald-700 dark:text-emerald-400',
-      border: 'border-emerald-200 dark:border-emerald-800',
+      bg: 'bg-win-bg dark:bg-win-bg',
+      text: 'text-success dark:text-success',
+      border: 'border-success/30 dark:border-success/30',
       label: 'OFFSPRING',
     },
     custom: {
-      bg: 'bg-violet-100 dark:bg-violet-950/50',
-      text: 'text-violet-700 dark:text-violet-400',
-      border: 'border-violet-200 dark:border-violet-800',
+      bg: 'bg-accent-soft dark:bg-accent-soft',
+      text: 'text-primary dark:text-primary',
+      border: 'border-accent/30 dark:border-accent/30',
       label: 'CUSTOM',
     },
   };
@@ -1408,6 +1381,14 @@ function BirdIdentityCard({
         : codeType === 'offspring'
           ? t('hub.roleCaptionOffspring', { sire: sireLabel, dam: damLabel })
           : t('hub.roleCaptionCustom');
+  const initials =
+    fowl.name
+      .trim()
+      .split(/\s+/)
+      .map((part) => part[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase() || '?';
 
   return (
     <button
@@ -1417,9 +1398,28 @@ function BirdIdentityCard({
       data-fowl-name={fowl.name}
       data-code-kind={codeType}
       data-fighter={isFighter ? 'true' : 'false'}
-      className="hub-identity-card group bg-card border-border w-full cursor-pointer rounded-2xl border p-4 text-left shadow-sm transition-all hover:border-emerald-300 hover:shadow-md dark:hover:border-emerald-700"
+      className="hub-identity-card group bg-card border-border w-full cursor-pointer rounded-2xl border p-4 text-left shadow-sm transition-all hover:border-success/30 hover:shadow-md dark:hover:border-success/30"
     >
-      <div className="flex items-start gap-3">
+      <div className="flex min-w-0 items-start gap-3">
+        <div data-testid="identity-avatar" className="shrink-0">
+          <ChickenPhoto
+            name={fowl.name}
+            code={code}
+            imageUrl={fowl.image_url}
+            photoPath={fowl.photo_path}
+            photoThumbPath={fowl.photo_thumb_path}
+            size={44}
+            shape={isFemale(fowl.gender) ? 'round' : 'square'}
+            interactive={false}
+            showLightbox={false}
+            className="border-border border"
+            fallback={
+              <span className="bg-muted text-muted-foreground flex h-full w-full items-center justify-center text-xs font-black">
+                {initials}
+              </span>
+            }
+          />
+        </div>
         <span
           role="img"
           aria-label={tileAria}
@@ -1438,7 +1438,7 @@ function BirdIdentityCard({
           </span>
         </span>
         <div className="min-w-0 flex-1">
-          <p className="hub-identity-fit text-card-foreground text-xs font-black group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
+          <p className="hub-identity-fit text-card-foreground text-xs font-black group-hover:text-success dark:group-hover:text-success">
             {fowl.name}
           </p>
           <p className="hub-identity-fit text-muted-foreground text-xs font-semibold">
@@ -1452,7 +1452,7 @@ function BirdIdentityCard({
             {roleCaption}
           </p>
           {isFighter && fowl.wing_band && (
-            <p className="hub-identity-fit mt-0.5 text-xs font-bold text-violet-600 dark:text-violet-400">
+            <p className="hub-identity-fit mt-0.5 text-xs font-bold text-primary dark:text-primary">
               Wing Band: {fowl.wing_band}
             </p>
           )}
@@ -1463,7 +1463,7 @@ function BirdIdentityCard({
                 .map(([strain, pct]) => (
                   <span
                     key={strain}
-                    className="rounded border border-teal-200 bg-teal-50 px-1.5 py-0.5 text-xs font-black text-teal-700 dark:border-teal-800 dark:bg-teal-950/30 dark:text-teal-400"
+                    className="rounded border border-success/30 bg-win-bg px-1.5 py-0.5 text-xs font-black text-success dark:border-success/30 dark:bg-win-bg dark:text-success"
                   >
                     {strain} {Math.round(pct as number)}%
                   </span>
@@ -1476,7 +1476,7 @@ function BirdIdentityCard({
             (total > 0 ? (
               <span
                 data-testid="identity-fight-summary"
-                className={`rounded-full border px-2 py-0.5 text-xs font-black ${(winRate ?? 0) >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
+                className={`rounded-full border px-2 py-0.5 text-xs font-black ${(winRate ?? 0) >= 50 ? 'border-success/30 bg-win-bg text-success dark:border-success/30 dark:bg-win-bg dark:text-success' : 'border-danger/30 bg-loss-bg text-danger dark:border-danger/30 dark:bg-loss-bg dark:text-danger'}`}
               >
                 {winRate === null ? '—%' : `${winRate}%`} · {wins}W-{losses}L
                 {draws > 0 ? `-${draws}D` : ''}
@@ -1491,7 +1491,7 @@ function BirdIdentityCard({
             ))}
           <p
             data-testid="identity-status"
-            className={`mt-1 text-xs font-bold ${fowl.status === 'Active' ? 'text-emerald-600 dark:text-emerald-400' : fowl.status === 'Deceased' ? 'text-rose-600 dark:text-rose-400' : 'text-muted-foreground'}`}
+            className={`mt-1 text-xs font-bold ${fowl.status === 'Active' ? 'text-success dark:text-success' : fowl.status === 'Deceased' ? 'text-danger dark:text-danger' : 'text-muted-foreground'}`}
           >
             {fowl.status}
           </p>
@@ -1534,6 +1534,7 @@ export default function BreedingHub({
     param: 'tab',
     values: BREEDING_TABS,
     defaultValue: 'coding',
+    history: 'push',
   });
   const [breedingPairs, setBreedingPairs] = useState<BreedingPairRecord[]>([]);
   const [incidents, setIncidents] = useState<SafetyIncidentRecord[]>([]);
@@ -1745,154 +1746,200 @@ export default function BreedingHub({
     [fowls, codes],
   );
 
-  const totalMales = fowls.filter(isSireGender).length;
-  const totalFemales = fowls.length - totalMales;
-  const totalOffspring = fowls.filter(
-    (f) => classifyBirdCode(codeOf(f, codes)) === 'offspring',
-  ).length;
+  const codedSires = useMemo(
+    () =>
+      fowls
+        .filter(isSireGender)
+        .filter((f) => classifyBirdCode(codeOf(f, codes)) === 'sire'),
+    [fowls, codes],
+  );
+  const codedDams = useMemo(
+    () =>
+      fowls
+        .filter((f) => isFemale(f.gender))
+        .filter((f) => classifyBirdCode(codeOf(f, codes)) === 'dam'),
+    [fowls, codes],
+  );
+  const codedOffspring = useMemo(
+    () => fowls.filter((f) => classifyBirdCode(codeOf(f, codes)) === 'offspring'),
+    [fowls, codes],
+  );
+  const [bannerImageOk, setBannerImageOk] = useState(true);
+  const tabButtonRefs = useRef<Map<BreedingTab, HTMLButtonElement>>(new Map());
+
+  const summarizeCodes = (items: FowlRecord[]) => {
+    const values = items
+      .map((f) => formatBirdCodeForDisplay(codeOf(f, codes)))
+      .filter(Boolean);
+    if (values.length === 0) return '-';
+    const first = values.slice(0, 3).join(', ');
+    return values.length > 3 ? `${first}, +${values.length - 3}` : first;
+  };
 
   const TABS = [
+    { id: 'coding' as BreedingTab, label: 'Coding System', icon: Hash },
+    { id: 'pairs' as BreedingTab, label: 'Breeding Pairs', icon: Heart },
+    { id: 'identity' as BreedingTab, label: 'Chicken Identity', icon: Eye },
+    { id: 'safety' as BreedingTab, label: 'Safety Incidents', icon: Shield },
+  ];
+
+  const handleTabKeyDown = (event: React.KeyboardEvent, index: number) => {
+    let nextIndex = index;
+    if (event.key === 'ArrowRight') nextIndex = (index + 1) % TABS.length;
+    else if (event.key === 'ArrowLeft') nextIndex = (index - 1 + TABS.length) % TABS.length;
+    else if (event.key === 'Home') nextIndex = 0;
+    else if (event.key === 'End') nextIndex = TABS.length - 1;
+    else return;
+    event.preventDefault();
+    const next = TABS[nextIndex];
+    setActiveTab(next.id);
+    tabButtonRefs.current.get(next.id)?.focus();
+  };
+
+  const kpis = [
     {
-      id: 'coding' as BreedingTab,
-      label: 'Coding System',
-      icon: Hash,
-      activeClass: 'bg-violet-600',
+      key: 'males',
+      label: t('hub.kpiBreedingMales'),
+      value: codedSires.length,
+      caption: t('hub.kpiCocksCaption', { codes: summarizeCodes(codedSires) }),
+      icon: Mars,
+      tone: 'bg-cock-bg text-cock',
     },
     {
-      id: 'pairs' as BreedingTab,
-      label: 'Breeding Pairs',
-      icon: Heart,
-      activeClass: 'bg-rose-600',
+      key: 'females',
+      label: t('hub.kpiBreedingFemales'),
+      value: codedDams.length,
+      caption: t('hub.kpiHensCaption', { codes: summarizeCodes(codedDams) }),
+      icon: Venus,
+      tone: 'bg-hen-bg text-hen',
     },
     {
-      id: 'identity' as BreedingTab,
-      label: 'Chicken Identity',
-      icon: Eye,
-      activeClass: 'bg-emerald-600',
+      key: 'offspring',
+      label: t('hub.kpiOffspring'),
+      value: codedOffspring.length,
+      caption: t('hub.kpiChicksCaption', { codes: summarizeCodes(codedOffspring) }),
+      icon: Egg,
+      tone: 'bg-low-sample-bg text-warning',
     },
     {
-      id: 'safety' as BreedingTab,
-      label: 'Safety Incidents',
-      icon: Shield,
-      activeClass: 'bg-amber-600',
+      key: 'pairs',
+      label: t('hub.kpiActivePairs'),
+      value: activePairs,
+      caption: t('hub.kpiPairsCaption'),
+      icon: Users,
+      tone: 'bg-win-bg text-success',
     },
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-card border-border rounded-3xl border p-6 shadow-sm sm:p-7">
-        <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="flex flex-1 items-center gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-violet-500/30 bg-gradient-to-br from-violet-500/20 to-emerald-500/20">
-              <Dna className="h-6 w-6 text-violet-500" />
-            </div>
-            <div>
-              <h1 className="text-card-foreground text-xl font-black tracking-tight sm:text-2xl">
-                Breeding &amp; Lineage Hub
-              </h1>
-              <p className="text-muted-foreground mt-0.5 text-xs font-semibold sm:text-sm">
-                Coding system, pairing history, bloodline monitoring, and safety incidents
-              </p>
-            </div>
+    <div className="min-w-0 space-y-5">
+      <section className="border-primary/15 from-accent-soft via-background to-brand-orange/10 relative overflow-hidden rounded-3xl border bg-gradient-to-r p-5 shadow-sm sm:p-7">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 hidden w-2/3 md:block">
+          {bannerImageOk && (
+            <>
+              <Image
+                src="/images/hero-farm.jpg"
+                alt=""
+                fill
+                priority={false}
+                loading="lazy"
+                sizes="(max-width: 1023px) 0vw, 55vw"
+                className="object-cover object-center opacity-35"
+                onError={() => setBannerImageOk(false)}
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-background/20" />
+            </>
+          )}
+        </div>
+        <div className="relative z-10 flex min-w-0 items-center gap-4">
+          <div className="bg-sidebar text-sidebar-foreground flex h-16 w-16 shrink-0 items-center justify-center rounded-full shadow-lg shadow-primary/20">
+            <Dna className="h-8 w-8" aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-card-foreground text-2xl leading-tight font-black tracking-tight break-words sm:text-3xl">
+              {t('hub.bannerTitle')}
+            </h1>
+            <p className="text-muted-foreground mt-1 max-w-xl text-sm font-semibold break-words">
+              {t('hub.bannerSubtitle')}
+            </p>
           </div>
         </div>
+      </section>
 
-        {/* Summary stats */}
-        <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            {
-              label: 'Breeding Males',
-              value: totalMales,
-              color: 'text-sky-600 dark:text-sky-400',
-              icon: Mars,
-              iconBg: 'bg-sky-100 text-sky-600 dark:bg-sky-950/50 dark:text-sky-400',
-              sub: 'Coded: 1, 2, 3...',
-            },
-            {
-              label: 'Breeding Females',
-              value: totalFemales,
-              color: 'text-pink-600 dark:text-pink-400',
-              icon: Venus,
-              iconBg: 'bg-pink-100 text-pink-600 dark:bg-pink-950/50 dark:text-pink-400',
-              sub: 'Coded: A, B, C...',
-            },
-            {
-              label: ROLE_LABEL['Non-Breeding'],
-              value: totalOffspring,
-              color: 'text-amber-600 dark:text-amber-400',
-              icon: Egg,
-              iconBg: 'bg-amber-100 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400',
-              sub: 'Coded: 1A₁, 1A₂...',
-            },
-            {
-              label: 'Active Pairs',
-              value: activePairs,
-              color: 'text-emerald-600 dark:text-emerald-400',
-              icon: Link2,
-              iconBg: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400',
-              sub: 'Breeding pairs',
-            },
-          ].map((s) => (
-            <div key={s.label} className="bg-muted/40 flex items-center gap-3 rounded-2xl p-4">
-              <span
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${s.iconBg}`}
-              >
-                <s.icon className="h-5 w-5" aria-hidden="true" />
+      <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {kpis.map((kpi) => {
+          const Icon = kpi.icon;
+          return (
+            <article
+              key={kpi.key}
+              className="bg-card border-border flex min-w-0 items-start gap-3 rounded-2xl border p-4 shadow-sm [overflow-wrap:anywhere]"
+            >
+              <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${kpi.tone}`}>
+                <Icon className="h-5 w-5" aria-hidden="true" />
               </span>
               <div className="min-w-0">
-                <p className={`text-2xl font-black ${s.color} leading-none`}>{s.value}</p>
-                <p className="text-muted-foreground mt-0.5 text-xs font-bold tracking-wide uppercase">
-                  {s.label}
+                <p className="text-card-foreground text-3xl leading-none font-black">{kpi.value}</p>
+                <p className="text-muted-foreground mt-1 text-xs font-black tracking-wide uppercase break-words">
+                  {kpi.label}
                 </p>
-                <p className="text-muted-foreground text-xs">{s.sub}</p>
+                <p className="text-muted-foreground mt-0.5 text-xs font-semibold break-words">
+                  {kpi.caption}
+                </p>
               </div>
-            </div>
-          ))}
-        </div>
+            </article>
+          );
+        })}
+      </div>
 
-        {/* Tabs */}
-        <div
-          role="tablist"
-          aria-label="Breeding Hub Navigation"
-          className="bg-muted/60 border-border flex flex-wrap items-center gap-1.5 rounded-2xl border p-1.5"
-        >
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                id={`breeding-tab-${tab.id}`}
-                aria-selected={isActive}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold whitespace-nowrap transition-all duration-200 ${
-                  isActive
-                    ? `${tab.activeClass} text-white shadow-sm`
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                {tab.label}
-                {tab.id === 'safety' && criticalIncidents > 0 && (
-                  <span
-                    className={`rounded-full px-1.5 py-0.5 text-xs font-black ${isActive ? 'bg-white/20' : 'bg-rose-100 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400'}`}
-                  >
-                    {criticalIncidents}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+      <div
+        role="tablist"
+        aria-label="Breeding Hub Navigation"
+        className="bg-muted/50 border-border flex min-w-0 flex-wrap items-center gap-1.5 rounded-full border p-1.5"
+      >
+        {TABS.map((tab, index) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              ref={(el) => {
+                if (el) tabButtonRefs.current.set(tab.id, el);
+                else tabButtonRefs.current.delete(tab.id);
+              }}
+              type="button"
+              role="tab"
+              id={`breeding-tab-${tab.id}`}
+              aria-selected={isActive}
+              aria-controls={`breeding-panel-${tab.id}`}
+              tabIndex={isActive ? 0 : -1}
+              onClick={() => setActiveTab(tab.id)}
+              onKeyDown={(event) => handleTabKeyDown(event, index)}
+              className={`focus-visible:ring-ring flex min-h-11 cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-xs font-bold transition-colors motion-reduce:transition-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none sm:px-4 ${
+                isActive
+                  ? 'bg-sidebar text-sidebar-foreground border-sidebar shadow-sm'
+                  : 'bg-card text-foreground border-border hover:bg-accent-soft'
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span className="min-w-0 break-words">{tab.label}</span>
+              {tab.id === 'safety' && criticalIncidents > 0 && (
+                <span
+                  className={`rounded-full px-1.5 py-0.5 text-xs font-black ${
+                    isActive ? 'bg-primary-foreground/20' : 'bg-danger/10 text-danger'
+                  }`}
+                >
+                  {criticalIncidents}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Load status */}
       {loading && (
         <div className="bg-card border-border flex items-center justify-center gap-3 rounded-3xl border p-8 shadow-sm">
-          <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
+          <Loader2 className="h-4 w-4 animate-spin text-success" />
           <p className="text-muted-foreground text-xs font-bold">
             Loading pairing history and safety records...
           </p>
@@ -1900,10 +1947,10 @@ export default function BreedingHub({
       )}
 
       {!loading && loadError && (
-        <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 sm:flex-row sm:items-start dark:border-amber-800 dark:bg-amber-950/30">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+        <div className="flex flex-col gap-3 rounded-2xl border border-warning/30 bg-low-sample-bg p-4 sm:flex-row sm:items-start dark:border-warning/30 dark:bg-low-sample-bg">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning dark:text-warning" />
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-black tracking-widest text-amber-700 uppercase dark:text-amber-400">
+            <p className="text-xs font-black tracking-widest text-warning uppercase dark:text-warning">
               Unable to Load Breeding Records
             </p>
             <p className="text-muted-foreground mt-0.5 text-xs font-semibold break-words">
@@ -1920,7 +1967,7 @@ export default function BreedingHub({
           <button
             type="button"
             onClick={loadRecords}
-            className="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs font-black text-amber-700 hover:underline dark:text-amber-400"
+            className="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs font-black text-warning hover:underline dark:text-warning"
           >
             <RefreshCw className="h-3 w-3" />
             Retry
@@ -1930,17 +1977,22 @@ export default function BreedingHub({
 
       {/* ── CODING SYSTEM TAB ─────────────────────────────────────────────── */}
       {!loading && activeTab === 'coding' && (
-        <section className="space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-400">
-              <Hash className="h-5 w-5" />
+        <section
+          id="breeding-panel-coding"
+          role="tabpanel"
+          aria-labelledby="breeding-tab-coding"
+          className="min-w-0 space-y-4"
+        >
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="bg-sidebar text-sidebar-foreground flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
+              <Hash className="h-5 w-5" aria-hidden="true" />
             </div>
-            <div>
-              <h2 className="text-card-foreground text-base font-black">
-                Coding System for Lineage
+            <div className="min-w-0">
+              <h2 className="text-card-foreground text-base font-black break-words">
+                {t('hub.codingSectionTitle')}
               </h2>
-              <p className="text-muted-foreground text-xs font-bold">
-                Standardized tagging to track every chicken and its family lineage
+              <p className="text-muted-foreground text-xs font-bold break-words">
+                {t('hub.codingSectionSubtitle')}
               </p>
             </div>
           </div>
@@ -1949,8 +2001,8 @@ export default function BreedingHub({
           {pairingAnalytics.ranked.length > 0 && (
             <div className="bg-card border-border overflow-hidden rounded-3xl border shadow-sm">
               <div className="border-border flex items-center gap-3 border-b px-6 pt-6 pb-4">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-amber-200 bg-amber-100 dark:border-amber-800 dark:bg-amber-950/50">
-                  <BarChart3 className="h-5 w-5 text-amber-700 dark:text-amber-400" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-warning/30 bg-low-sample-bg dark:border-warning/30 dark:bg-low-sample-bg">
+                  <BarChart3 className="h-5 w-5 text-warning dark:text-warning" />
                 </div>
                 <div>
                   <h3 className="text-card-foreground text-sm font-black">
@@ -1970,9 +2022,9 @@ export default function BreedingHub({
                       key={ps.key}
                       className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3 ${
                         isElite
-                          ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/30'
+                          ? 'border-success/30 bg-win-bg dark:border-success/30 dark:bg-win-bg'
                           : isWeak
-                            ? 'border-rose-200 bg-rose-50 dark:border-rose-800 dark:bg-rose-950/30'
+                            ? 'border-danger/30 bg-loss-bg dark:border-danger/30 dark:bg-loss-bg'
                             : 'bg-muted/30 border-border'
                       }`}
                     >
@@ -1980,13 +2032,13 @@ export default function BreedingHub({
                         <span className="text-muted-foreground/40 w-4 shrink-0 text-xs font-black">
                           #{i + 1}
                         </span>
-                        {isElite && <Trophy className="h-3.5 w-3.5 shrink-0 text-amber-500" />}
-                        {isWeak && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-rose-500" />}
+                        {isElite && <Trophy className="h-3.5 w-3.5 shrink-0 text-warning" />}
+                        {isWeak && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-danger" />}
                         <div className="min-w-0">
                           <p className="text-card-foreground text-xs font-black">
-                            <span className="text-sky-600 dark:text-sky-400">{ps.sire}</span>
+                            <span className="text-cock dark:text-cock">{ps.sire}</span>
                             <span className="text-muted-foreground mx-1.5">×</span>
-                            <span className="text-pink-600 dark:text-pink-400">{ps.dam}</span>
+                            <span className="text-hen dark:text-hen">{ps.dam}</span>
                           </p>
                           <p className="text-muted-foreground text-xs font-semibold">
                             {ps.members.length} offspring · {ps.totalFights} fights
@@ -1996,7 +2048,7 @@ export default function BreedingHub({
                       <div className="flex shrink-0 items-center gap-2">
                         {ps.decided > 0 && (
                           <span
-                            className={`rounded-full border px-2 py-0.5 text-xs font-black ${(ps.winRate ?? 0) >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
+                            className={`rounded-full border px-2 py-0.5 text-xs font-black ${(ps.winRate ?? 0) >= 50 ? 'border-success/30 bg-win-bg text-success dark:border-success/30 dark:bg-win-bg dark:text-success' : 'border-danger/30 bg-loss-bg text-danger dark:border-danger/30 dark:bg-loss-bg dark:text-danger'}`}
                           >
                             {ps.winRate}%
                           </span>
@@ -2016,10 +2068,15 @@ export default function BreedingHub({
 
       {/* ── BREEDING PAIRS TAB ────────────────────────────────────────────── */}
       {activeTab === 'pairs' && (
-        <section className="space-y-4">
+        <section
+          id="breeding-panel-pairs"
+          role="tabpanel"
+          aria-labelledby="breeding-tab-pairs"
+          className="min-w-0 space-y-4"
+        >
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400">
+              <div className="bg-primary/10 text-primary border-primary/20 flex h-9 w-9 items-center justify-center rounded-xl border">
                 <Heart className="h-5 w-5" />
               </div>
               <div>
@@ -2033,7 +2090,7 @@ export default function BreedingHub({
               id="add-breeding-pair-btn"
               type="button"
               onClick={() => setShowAddPairing(true)}
-              className="flex shrink-0 cursor-pointer items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white shadow-sm transition-all hover:bg-emerald-700"
+              className="flex shrink-0 cursor-pointer items-center gap-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 min-h-11 px-4 py-2.5 text-xs font-black shadow-sm transition-all"
             >
               <Plus className="h-3.5 w-3.5" />
               New Pairing
@@ -2052,8 +2109,8 @@ export default function BreedingHub({
 
           {breedingPairs.length === 0 && !showAddPairing ? (
             <div className="bg-card border-border space-y-3 rounded-3xl border p-10 text-center shadow-sm">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-rose-200 bg-rose-100 dark:border-rose-800 dark:bg-rose-950/50">
-                <Heart className="h-7 w-7 text-rose-500" />
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-danger/30 bg-loss-bg dark:border-danger/30 dark:bg-loss-bg">
+                <Heart className="h-7 w-7 text-danger" />
               </div>
               <div>
                 <p className="text-card-foreground text-sm font-black">No Breeding Pairs Yet</p>
@@ -2064,7 +2121,7 @@ export default function BreedingHub({
               <button
                 type="button"
                 onClick={() => setShowAddPairing(true)}
-                className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-black text-white transition-all hover:bg-emerald-700"
+                className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 min-h-11 px-5 py-2.5 text-xs font-black transition-all"
               >
                 <Plus className="h-3.5 w-3.5" />
                 Record a Pairing
@@ -2088,10 +2145,10 @@ export default function BreedingHub({
           )}
 
           {pairingAnalytics.ranked.length > 0 && (
-            <div className="rounded-3xl border border-sky-200/50 bg-gradient-to-r from-sky-50 to-violet-50 p-5 sm:p-6 dark:border-sky-800/50 dark:from-sky-950/20 dark:to-violet-950/20">
+            <div className="rounded-3xl border border-cock/30 bg-gradient-to-r from-cock-bg to-accent-soft p-5 sm:p-6 dark:border-cock/30 dark:from-cock-bg dark:to-accent-soft">
               <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-600">
-                  <Info className="h-5 w-5 text-white" />
+                <div className="bg-cock text-background flex h-9 w-9 items-center justify-center rounded-xl">
+                  <Info className="h-5 w-5" />
                 </div>
                 <div>
                   <h3 className="text-card-foreground text-sm font-black">
@@ -2110,9 +2167,9 @@ export default function BreedingHub({
                   >
                     <div className="min-w-0">
                       <p className="text-card-foreground text-xs font-black">
-                        <span className="text-sky-600 dark:text-sky-400">{ps.sire}</span>
+                        <span className="text-cock dark:text-cock">{ps.sire}</span>
                         <span className="text-muted-foreground mx-1.5">×</span>
-                        <span className="text-pink-600 dark:text-pink-400">{ps.dam}</span>
+                        <span className="text-hen dark:text-hen">{ps.dam}</span>
                       </p>
                       <p className="text-muted-foreground text-xs font-semibold">
                         {ps.members.length} offspring · {ps.totalFights} recorded fights
@@ -2120,7 +2177,7 @@ export default function BreedingHub({
                     </div>
                     {ps.decided > 0 && (
                       <span
-                        className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-black ${(ps.winRate ?? 0) >= 50 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-400'}`}
+                        className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-black ${(ps.winRate ?? 0) >= 50 ? 'border-success/30 bg-win-bg text-success dark:border-success/30 dark:bg-win-bg dark:text-success' : 'border-danger/30 bg-loss-bg text-danger dark:border-danger/30 dark:bg-loss-bg dark:text-danger'}`}
                       >
                         {ps.winRate}% win rate
                       </span>
@@ -2135,10 +2192,15 @@ export default function BreedingHub({
 
       {/* ── BIRD IDENTITY TAB ─────────────────────────────────────────────── */}
       {activeTab === 'identity' && (
-        <section className="space-y-4">
+        <section
+          id="breeding-panel-identity"
+          role="tabpanel"
+          aria-labelledby="breeding-tab-identity"
+          className="min-w-0 space-y-4"
+        >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="flex flex-1 items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400">
+              <div className="bg-win-bg text-success border-success/30 flex h-9 w-9 items-center justify-center rounded-xl border">
                 <Eye className="h-5 w-5" />
               </div>
               <div>
@@ -2173,7 +2235,7 @@ export default function BreedingHub({
                 placeholder="Search chicken..."
                 value={identitySearch}
                 onChange={(e) => setIdentitySearch(e.target.value)}
-                className="border-border bg-card text-card-foreground placeholder:text-muted-foreground w-full rounded-2xl border py-3 pr-3.5 pl-10 text-xs font-semibold transition-all outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 dark:focus:ring-emerald-900/30"
+                className="border-border bg-card text-card-foreground placeholder:text-muted-foreground w-full rounded-2xl border py-3 pr-3.5 pl-10 text-xs font-semibold transition-all outline-none focus:border-success/30 focus:ring-4 focus:ring-success/40 dark:focus:ring-success/40"
               />
             </div>
           </div>
@@ -2187,33 +2249,33 @@ export default function BreedingHub({
                 type: 'SIRE',
                 code: '1',
                 desc: t('hub.legendSireDesc'),
-                bg: 'bg-sky-100 dark:bg-sky-950/50',
-                text: 'text-sky-700 dark:text-sky-400',
-                border: 'border-sky-200 dark:border-sky-800',
+                bg: 'bg-cock-bg dark:bg-cock-bg',
+                text: 'text-cock dark:text-cock',
+                border: 'border-cock/30 dark:border-cock/30',
               },
               {
                 type: 'DAM',
                 code: 'A',
                 desc: t('hub.legendDamDesc'),
-                bg: 'bg-pink-100 dark:bg-pink-950/50',
-                text: 'text-pink-700 dark:text-pink-400',
-                border: 'border-pink-200 dark:border-pink-800',
+                bg: 'bg-hen-bg dark:bg-hen-bg',
+                text: 'text-hen dark:text-hen',
+                border: 'border-hen/30 dark:border-hen/30',
               },
               {
                 type: 'OFFSPRING',
                 code: '1A₁',
                 desc: t('hub.legendOffspringDesc'),
-                bg: 'bg-emerald-100 dark:bg-emerald-950/50',
-                text: 'text-emerald-700 dark:text-emerald-400',
-                border: 'border-emerald-200 dark:border-emerald-800',
+                bg: 'bg-win-bg dark:bg-win-bg',
+                text: 'text-success dark:text-success',
+                border: 'border-success/30 dark:border-success/30',
               },
               {
                 type: 'CUSTOM',
                 code: '···',
                 desc: t('hub.legendCustomDesc'),
-                bg: 'bg-violet-100 dark:bg-violet-950/50',
-                text: 'text-violet-700 dark:text-violet-400',
-                border: 'border-violet-200 dark:border-violet-800',
+                bg: 'bg-accent-soft dark:bg-accent-soft',
+                text: 'text-primary dark:text-primary',
+                border: 'border-accent/30 dark:border-accent/30',
               },
             ].map((l) => (
               <div
@@ -2294,10 +2356,15 @@ export default function BreedingHub({
 
       {/* ── SAFETY INCIDENTS TAB ──────────────────────────────────────────── */}
       {activeTab === 'safety' && (
-        <section className="space-y-4">
+        <section
+          id="breeding-panel-safety"
+          role="tabpanel"
+          aria-labelledby="breeding-tab-safety"
+          className="min-w-0 space-y-4"
+        >
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400">
+              <div className="bg-warning/10 text-warning border-warning/30 flex h-9 w-9 items-center justify-center rounded-xl border">
                 <Shield className="h-5 w-5" />
               </div>
               <div>
@@ -2311,7 +2378,7 @@ export default function BreedingHub({
               id="add-safety-incident-btn"
               type="button"
               onClick={() => setShowAddIncident(true)}
-              className="flex shrink-0 cursor-pointer items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-black text-white shadow-sm transition-all hover:bg-rose-700"
+              className="flex shrink-0 cursor-pointer items-center gap-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 min-h-11 px-4 py-2.5 text-xs font-black shadow-sm transition-all"
             >
               <Plus className="h-3.5 w-3.5" />
               Record Incident
@@ -2348,8 +2415,8 @@ export default function BreedingHub({
 
           {incidents.length === 0 && !showAddIncident ? (
             <div className="bg-card border-border space-y-3 rounded-3xl border p-10 text-center shadow-sm">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/50">
-                <CheckCircle2 className="h-7 w-7 text-emerald-500" />
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-success/30 bg-win-bg dark:border-success/30 dark:bg-win-bg">
+                <CheckCircle2 className="h-7 w-7 text-success" />
               </div>
               <div>
                 <p className="text-card-foreground text-sm font-black">No Incidents Recorded</p>
@@ -2361,7 +2428,7 @@ export default function BreedingHub({
               <button
                 type="button"
                 onClick={() => setShowAddIncident(true)}
-                className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-rose-600 px-5 py-2.5 text-xs font-black text-white transition-all hover:bg-rose-700"
+                className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 min-h-11 px-5 py-2.5 text-xs font-black transition-all"
               >
                 <Plus className="h-3.5 w-3.5" />
                 Record Incident
@@ -2379,10 +2446,10 @@ export default function BreedingHub({
             </div>
           )}
 
-          <div className="flex items-start gap-3 rounded-2xl border border-amber-200/60 bg-gradient-to-r from-amber-50 to-orange-50 p-4 dark:border-amber-800/60 dark:from-amber-950/20 dark:to-orange-950/20">
-            <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+          <div className="flex items-start gap-3 rounded-2xl border border-warning/30 bg-gradient-to-r from-low-sample-bg to-low-sample-bg p-4 dark:border-warning/30 dark:from-low-sample-bg dark:to-low-sample-bg">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-warning dark:text-warning" />
             <div>
-              <p className="text-xs font-black tracking-widest text-amber-700 uppercase dark:text-amber-400">
+              <p className="text-xs font-black tracking-widest text-warning uppercase dark:text-warning">
                 Safety Monitoring Tip
               </p>
               <p className="text-muted-foreground mt-0.5 text-xs font-semibold">

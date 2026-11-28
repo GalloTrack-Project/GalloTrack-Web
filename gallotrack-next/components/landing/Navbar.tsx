@@ -1,259 +1,344 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+
+import React, { useEffect, useId, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
-import { Sun, Moon, Menu, X, ArrowRight } from 'lucide-react';
+import {
+  ArrowRight,
+  Home,
+  Info,
+  Lightbulb,
+  Menu,
+  Moon,
+  Sun,
+  UserPlus,
+  X,
+} from 'lucide-react';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { CompactLanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import Logo from '@/components/brand/Logo';
+import { useT, type TranslationKey } from '@/lib/i18n';
 
-export default function LandingNavbar() {
+type LandingNavbarProps = {
+  linkPrefix?: '' | '/';
+  activePage?: 'about';
+};
+
+type NavItem = {
+  id: string;
+  labelKey: TranslationKey;
+  icon: typeof Home;
+  href: string;
+  page?: boolean;
+};
+
+const NAV_ITEMS: NavItem[] = [
+  { id: 'features', labelKey: 'landing.features', icon: Home, href: '#features' },
+  {
+    id: 'how-it-works',
+    labelKey: 'landing.howItWorks',
+    icon: Lightbulb,
+    href: '#how-it-works',
+  },
+  { id: 'about', labelKey: 'landing.about', icon: Info, href: '/about', page: true },
+];
+
+export default function LandingNavbar({
+  linkPrefix = '',
+  activePage,
+}: LandingNavbarProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const auth = useAuth();
+  const t = useT();
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState<string>('');
+  const [activeSection, setActiveSection] = useState('');
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const drawerId = useId();
+  const isLoggedIn = !!auth.currentUserId;
+  const isDark = resolvedTheme === 'dark';
 
   useEffect(() => {
     setMounted(true);
+  }, []);
 
+  useEffect(() => {
     if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
 
-    const sectionIds = ['features', 'how-it-works', 'about'];
-    const elements = sectionIds
-      .map((id) => document.getElementById(id))
-      .filter((el): el is HTMLElement => el !== null);
+    const elements = NAV_ITEMS.filter((item) => !item.page)
+      .map((item) => document.getElementById(item.id))
+      .filter((element): element is HTMLElement => element !== null);
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
+          if (entry.isIntersecting) setActiveSection(entry.target.id);
         });
       },
-      {
-        rootMargin: '-20% 0px -60% 0px',
-        threshold: 0,
-      },
+      { rootMargin: '-20% 0px -60% 0px', threshold: 0 },
     );
 
-    elements.forEach((el) => observer.observe(el));
+    elements.forEach((element) => observer.observe(element));
     return () => observer.disconnect();
   }, []);
 
-  const isLoggedIn = !!auth.currentUserId;
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const drawer = drawerRef.current;
+    const getFocusable = () =>
+      Array.from(
+        drawer?.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ) ?? [],
+      ).filter((element) => element.getAttribute('aria-hidden') !== 'true');
+
+    const focusFirst = () => getFocusable()[0]?.focus();
+    const frame = window.requestAnimationFrame(focusFirst);
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setMobileMenuOpen(false);
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+
+      const focusable = getFocusable();
+      if (focusable.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previousFocus?.focus?.();
+    };
+  }, [mobileMenuOpen]);
+
+  const itemHref = (item: NavItem) => (item.page ? item.href : `${linkPrefix}${item.href}`);
+  const closeMobileMenu = () => setMobileMenuOpen(false);
+  const toggleTheme = () => setTheme(isDark ? 'light' : 'dark');
+
+  const themeButton = (fullWidth = false) => (
+    <button
+      type="button"
+      onClick={toggleTheme}
+      aria-label={isDark ? t('header.switchToLight') : t('header.switchToDark')}
+      title={isDark ? t('header.switchToLight') : t('header.switchToDark')}
+      className={`border-border bg-card text-foreground hover:bg-muted focus-visible:ring-ring focus-visible:ring-offset-background inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md border text-sm font-bold transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none ${
+        fullWidth ? 'w-full px-4' : 'w-11'
+      }`}
+    >
+      {isDark ? (
+        <Sun className="h-4 w-4" aria-hidden="true" />
+      ) : (
+        <Moon className="h-4 w-4" aria-hidden="true" />
+      )}
+      {fullWidth && <span>{t('header.toggleTheme')}</span>}
+    </button>
+  );
+
+  const authActions = (fullWidth = false) =>
+    isLoggedIn ? (
+      <Link
+        href="/dashboard"
+        onClick={closeMobileMenu}
+        className={`bg-gradient-to-r from-sidebar to-sidebar-end text-sidebar-foreground focus-visible:ring-ring focus-visible:ring-offset-background inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 text-sm font-black shadow-md transition-colors hover:from-hero-mid hover:to-sidebar focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none ${
+          fullWidth ? 'w-full' : ''
+        }`}
+      >
+        <span>{t('landing.openDashboard')}</span>
+        <ArrowRight className="h-4 w-4" aria-hidden="true" />
+      </Link>
+    ) : (
+      <div className={fullWidth ? 'flex w-full flex-col gap-2.5' : 'flex items-center gap-2.5'}>
+        <Link
+          href="/login"
+          onClick={closeMobileMenu}
+          className={`border-border bg-card/80 text-foreground hover:bg-muted focus-visible:ring-ring focus-visible:ring-offset-background inline-flex min-h-11 items-center justify-center rounded-full border px-4 text-sm font-bold transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none ${
+            fullWidth ? 'w-full' : ''
+          }`}
+        >
+          {t('landing.login')}
+        </Link>
+        <Link
+          href="/register"
+          onClick={closeMobileMenu}
+          className={`from-sidebar to-sidebar-active text-sidebar-foreground focus-visible:ring-ring focus-visible:ring-offset-background hover:from-sidebar-end inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-gradient-to-r px-4 text-sm font-black shadow-md transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none ${
+            fullWidth ? 'w-full' : ''
+          }`}
+        >
+          <UserPlus className="h-4 w-4" aria-hidden="true" />
+          {t('landing.signUp')}
+        </Link>
+      </div>
+    );
 
   return (
-    <header className="border-border/80 bg-background/85 sticky top-0 z-50 w-full border-b backdrop-blur-md transition-colors">
-      <div className="mx-auto flex h-16 max-w-7xl flex-wrap items-center justify-between gap-x-2 px-4 sm:px-6 lg:px-8">
-        {/* Brand Logo */}
+    <>
+      <header className="border-border/80 bg-background/85 sticky top-0 z-50 w-full border-b shadow-sm backdrop-blur-md">
+      <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-8">
         <Link
           href="/"
-          aria-label="GalloTrack home"
-          className="group flex min-w-0 items-center gap-2.5"
+          aria-label={t('landing.brandHome')}
+          className="focus-visible:ring-ring focus-visible:ring-offset-background flex min-w-0 shrink-0 items-center gap-2.5 rounded-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
         >
-          <span className="hidden sm:inline-flex">
-            <Logo variant="full" size="md" />
-          </span>
-          <span className="inline-flex sm:hidden">
+          <span className="bg-background ring-border inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg p-1 shadow-sm ring-1">
             <Logo variant="mark" size="md" />
           </span>
-          <span className="text-muted-foreground hidden font-mono text-xs font-bold tracking-widest uppercase sm:inline">
-            v1.0.0
+          <span className="flex min-w-0 flex-col leading-none">
+            <span className="text-foreground text-lg font-black tracking-tight break-words sm:text-xl">
+              GALLO<span className="text-brand-red">TRACK</span>
+            </span>
+            <span className="text-muted-foreground mt-1 block font-mono text-[10px] font-bold tracking-[0.22em] uppercase">
+              {t('landing.version')}
+            </span>
           </span>
         </Link>
 
-        {/* Desktop Navigation Links with Active Scroll Indicator */}
-        <nav
-          aria-label="Main Navigation"
-          className="hidden items-center gap-8 text-sm font-bold md:flex"
-        >
-          <a
-            href="#features"
-            className={`relative py-1 transition-colors ${
-              activeSection === 'features'
-                ? 'font-extrabold text-emerald-600 dark:text-emerald-400'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            Features
-            {activeSection === 'features' && (
-              <span className="absolute right-0 bottom-0 left-0 h-0.5 rounded-full bg-emerald-600 dark:bg-emerald-400" />
-            )}
-          </a>
-          <a
-            href="#how-it-works"
-            className={`relative py-1 transition-colors ${
-              activeSection === 'how-it-works'
-                ? 'font-extrabold text-emerald-600 dark:text-emerald-400'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            How it works
-            {activeSection === 'how-it-works' && (
-              <span className="absolute right-0 bottom-0 left-0 h-0.5 rounded-full bg-emerald-600 dark:bg-emerald-400" />
-            )}
-          </a>
-          <a
-            href="#about"
-            className={`relative py-1 transition-colors ${
-              activeSection === 'about'
-                ? 'font-extrabold text-emerald-600 dark:text-emerald-400'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            About
-            {activeSection === 'about' && (
-              <span className="absolute right-0 bottom-0 left-0 h-0.5 rounded-full bg-emerald-600 dark:bg-emerald-400" />
-            )}
-          </a>
+        <nav aria-label={t('landing.navAria')} className="hidden items-center gap-2 lg:flex">
+          {NAV_ITEMS.map((item) => {
+            const isPageActive = activePage === item.id;
+            const isSectionActive = !isPageActive && activeSection === item.id;
+            const isActive = isPageActive || isSectionActive;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.id}
+                href={itemHref(item)}
+                aria-current={isPageActive ? 'page' : isSectionActive ? 'location' : undefined}
+                className={`focus-visible:ring-ring focus-visible:ring-offset-background relative inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-sm font-bold transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none motion-reduce:transition-none ${
+                  isActive
+                    ? isPageActive
+                      ? 'text-brand-red'
+                      : 'bg-accent-soft text-brand-red'
+                    : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                }`}
+              >
+                <Icon className="h-4 w-4" aria-hidden="true" />
+                {t(item.labelKey)}
+                <span
+                  aria-hidden="true"
+                  className={`bg-brand-red absolute right-3 bottom-0 left-3 h-0.5 rounded-full transition-opacity motion-reduce:transition-none ${
+                    isActive ? 'opacity-100' : 'opacity-0'
+                  }`}
+                />
+              </Link>
+            );
+          })}
         </nav>
 
-        {/* Desktop Action Area */}
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="hidden items-center gap-2.5 md:flex lg:gap-3">
           <CompactLanguageSwitcher />
-          {mounted && (
-            <button
-              type="button"
-              onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-              aria-label={resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              title={resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              className="border-border bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border transition-colors"
-            >
-              {resolvedTheme === 'dark' ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
-            </button>
-          )}
-
-          {isLoggedIn ? (
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-extrabold text-white shadow-sm transition-all hover:bg-emerald-700"
-            >
-              <span>Open Dashboard</span>
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          ) : (
-            <div className="flex items-center gap-2.5">
-              <Link
-                href="/login"
-                className="text-foreground hover:bg-muted cursor-pointer rounded-lg px-3.5 py-2 text-sm font-bold transition-colors"
-              >
-                Log in
-              </Link>
-              <Link
-                href="/register"
-                className="cursor-pointer rounded-lg bg-emerald-600 px-4 py-2 text-sm font-extrabold text-white shadow-sm transition-all hover:bg-emerald-700"
-              >
-                Sign up
-              </Link>
-            </div>
-          )}
+          <span aria-hidden="true" className="bg-border h-6 w-px" />
+          {mounted && themeButton()}
+          {authActions()}
         </div>
 
-        {/* Mobile Hamburger & Theme Toggle */}
         <div className="flex shrink-0 items-center gap-2 md:hidden">
-          <CompactLanguageSwitcher />
-          {mounted && (
-            <button
-              type="button"
-              onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-              aria-label="Toggle theme"
-              className="text-muted-foreground hover:text-foreground rounded-lg p-1.5 sm:p-2"
-            >
-              {resolvedTheme === 'dark' ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
-            </button>
-          )}
-
           <button
+            ref={triggerRef}
             type="button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-            className="text-muted-foreground hover:text-foreground rounded-lg p-1.5 focus:outline-none sm:p-2"
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label={t('landing.openMenu')}
+            aria-haspopup="dialog"
+            aria-expanded={mobileMenuOpen}
+            aria-controls={drawerId}
+            className="border-border bg-card text-foreground hover:bg-muted focus-visible:ring-ring focus-visible:ring-offset-background inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-md border focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
           >
-            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            <Menu className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
       </div>
+      </header>
 
-      {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="border-border bg-card animate-in slide-in-from-top space-y-4 border-b px-4 pt-3 pb-6 duration-200 md:hidden">
-          <nav aria-label="Mobile Navigation" className="flex flex-col space-y-2 text-sm font-bold">
-            <a
-              href="#features"
-              onClick={() => setMobileMenuOpen(false)}
-              className={`rounded-md px-3 py-2 transition-colors ${
-                activeSection === 'features'
-                  ? 'bg-emerald-500/10 font-extrabold text-emerald-600 dark:text-emerald-400'
-                  : 'hover:bg-muted text-foreground'
-              }`}
-            >
-              Features
-            </a>
-            <a
-              href="#how-it-works"
-              onClick={() => setMobileMenuOpen(false)}
-              className={`rounded-md px-3 py-2 transition-colors ${
-                activeSection === 'how-it-works'
-                  ? 'bg-emerald-500/10 font-extrabold text-emerald-600 dark:text-emerald-400'
-                  : 'hover:bg-muted text-foreground'
-              }`}
-            >
-              How it works
-            </a>
-            <a
-              href="#about"
-              onClick={() => setMobileMenuOpen(false)}
-              className={`rounded-md px-3 py-2 transition-colors ${
-                activeSection === 'about'
-                  ? 'bg-emerald-500/10 font-extrabold text-emerald-600 dark:text-emerald-400'
-                  : 'hover:bg-muted text-foreground'
-              }`}
-            >
-              About
-            </a>
-          </nav>
-
-          <div className="border-border flex flex-col gap-2.5 border-t pt-2">
-            {isLoggedIn ? (
-              <Link
-                href="/dashboard"
-                onClick={() => setMobileMenuOpen(false)}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-extrabold text-white"
+        <div className="fixed inset-0 z-[80] md:hidden">
+          <button
+            type="button"
+            aria-label={t('landing.closeMenu')}
+            onClick={closeMobileMenu}
+            className="bg-sidebar-end/60 absolute inset-0 cursor-default backdrop-blur-[2px]"
+          />
+          <div
+            ref={drawerRef}
+            id={drawerId}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('landing.mobileNavAria')}
+            className="border-border bg-card text-card-foreground absolute top-0 right-0 flex h-full w-[min(22rem,90vw)] flex-col overflow-y-auto border-l shadow-2xl"
+          >
+            <div className="border-border flex items-center justify-between gap-3 border-b px-4 py-3">
+              <span className="text-foreground text-lg font-black tracking-tight">
+                GALLO<span className="text-brand-red">TRACK</span>
+              </span>
+              <button
+                type="button"
+                onClick={closeMobileMenu}
+                aria-label={t('landing.closeMenu')}
+                className="border-border bg-card text-foreground hover:bg-muted focus-visible:ring-ring focus-visible:ring-offset-background inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-md border focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
               >
-                <span>Open Dashboard</span>
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="border-border text-foreground hover:bg-muted w-full rounded-lg border py-2.5 text-center text-sm font-bold"
-                >
-                  Log in
-                </Link>
-                <Link
-                  href="/register"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full rounded-lg bg-emerald-600 py-2.5 text-center text-sm font-extrabold text-white hover:bg-emerald-700"
-                >
-                  Sign up
-                </Link>
-              </>
-            )}
+                <X className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </div>
+
+            <nav aria-label={t('landing.mobileNavAria')} className="flex flex-col gap-1 p-4">
+              {NAV_ITEMS.map((item) => {
+                const Icon = item.icon;
+                const isPageActive = activePage === item.id;
+                const isSectionActive = !isPageActive && activeSection === item.id;
+                const isActive = isPageActive || isSectionActive;
+                return (
+                  <Link
+                    key={item.id}
+                    href={itemHref(item)}
+                    onClick={closeMobileMenu}
+                    aria-current={isPageActive ? 'page' : isSectionActive ? 'location' : undefined}
+                    className={`focus-visible:ring-ring flex min-h-11 items-center gap-2 rounded-full px-3 text-base font-bold transition-colors focus-visible:ring-2 focus-visible:outline-none motion-reduce:transition-none ${
+                      isActive
+                        ? isPageActive
+                          ? 'text-brand-red'
+                          : 'bg-accent-soft text-brand-red'
+                        : 'text-foreground hover:bg-muted'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                    {t(item.labelKey)}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <div className="border-border mt-auto space-y-3 border-t p-4">
+              <CompactLanguageSwitcher className="w-full [&>button]:w-full [&>button]:justify-between" />
+              {mounted && themeButton(true)}
+              {authActions(true)}
+            </div>
           </div>
         </div>
       )}
-    </header>
+    </>
   );
 }

@@ -91,13 +91,26 @@ The legacy Flask/pytest suite is deprecated - see [FLASK_DEPRECATED.md](FLASK_DE
 
 ## Database Schema
 
-Migrations live in `supabase/migrations/` and are applied with the Supabase CLI:
+Migrations live in `supabase/migrations/`.
 
-```bash
-supabase db push          # or: supabase migration up
+**Do not run `supabase db push` against production.** Production has been changed manually in
+the Supabase SQL Editor, so the remote migration ledger and the repo can disagree. `db push`
+applies every migration it considers pending, without per-file review.
+
+Apply one reviewed migration file at a time in the Supabase SQL Editor, in filename order, after
+running the read-only ledger check and verifying the target objects. Record the applied migration
+in the ledger only after it succeeds. Never batch unreviewed migrations.
+
+Read-only ledger check:
+
+```sql
+select version, name
+from supabase_migrations.schema_migrations
+order by version;
 ```
 
-Without the CLI, run each migration file's SQL in the Supabase SQL editor in filename order.
+Compare that list with `supabase/migrations/*.sql`. Any file whose version is absent is pending;
+do not treat that as approval to apply it.
 
 Tables: `profiles`, `fowl`, `match`, `farms`, `strains`, `system_settings`, `admin_audit_logs`, `marketplace_listings`
 
@@ -130,7 +143,7 @@ Set the same environment variables in the process environment (`.env.local` also
 Only the four variables in `.env.example` change between hosts - no code edits are needed. After moving environments:
 
 1. Update the env vars, redeploy.
-2. Apply any new migrations (`supabase db push`).
+2. Apply any new migrations one reviewed file at a time in the Supabase SQL Editor.
 3. Run `npm run gate` to confirm the build is healthy.
 
 ## Contributing
