@@ -19,6 +19,7 @@ import {
   Handshake,
   Link2,
   BookOpen,
+  ArrowLeft,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useT } from '@/lib/i18n';
@@ -57,7 +58,14 @@ import {
 } from '@/lib/units';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
-import { isMale, isFemale, canFight, sexLabel, parentBloodlineOf, formatColorDisplay } from '@/lib/helpers';
+import {
+  isMale,
+  isFemale,
+  canFight,
+  sexLabel,
+  parentBloodlineOf,
+  formatColorDisplay,
+} from '@/lib/helpers';
 import {
   buildChickenMatchStatsMap,
   getChickenMatchStats,
@@ -131,6 +139,7 @@ const ROLE_OPTIONS: { value: 'none' | 'breeder' | 'material'; label: string }[] 
 type FowlDetailsModalProps = {
   selectedFowlForDetails: FowlRecord | null;
   setSelectedFowlForDetails: (f: FowlRecord | null) => void;
+  presentation?: 'modal' | 'page';
   matchHistory: MatchRecord[];
   fowls: FowlRecord[];
   getAgeParts: (birthdate: string) => AgeParts | null;
@@ -148,9 +157,56 @@ type FowlDetailsModalProps = {
   pairingAnalytics: PairingAnalytics;
 };
 
+function FowlDetailsShell({
+  presentation,
+  onClose,
+  children,
+}: {
+  presentation: 'modal' | 'page';
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  if (presentation === 'page') {
+    return (
+      <div className="mx-auto w-full max-w-5xl space-y-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="border-border bg-card text-foreground hover:bg-muted focus-visible:ring-ring inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-xs font-black transition-colors focus-visible:ring-2 focus-visible:outline-none"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+            Back
+          </button>
+          <div className="min-w-0">
+            <h1 className="text-lg font-black tracking-tight sm:text-xl">
+              Individual Chicken Analytics &amp; Match Logs
+            </h1>
+            <p className="text-muted-foreground text-xs font-semibold">Full chicken profile</p>
+          </div>
+        </div>
+        <div className="flex flex-col gap-4">{children}</div>
+      </div>
+    );
+  }
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title="Individual Chicken Analytics & Match Logs"
+      icon={<Dna className="h-5 w-5" aria-hidden="true" />}
+      className="max-w-2xl"
+    >
+      {children}
+    </Modal>
+  );
+}
+
 export default function FowlDetailsModal({
   selectedFowlForDetails,
   setSelectedFowlForDetails,
+  presentation = 'modal',
   matchHistory,
   fowls,
   getAgeParts,
@@ -325,8 +381,7 @@ export default function FowlDetailsModal({
     const bloodlineStats = bloodlineStatsOf(bird);
     const code = formatBirdCodeForDisplay(birdCodeOf(bird, fowls));
 
-    const breed =
-      classification.type === 'Crossbred' ? classification.derivedBreed : bird.breed;
+    const breed = classification.type === 'Crossbred' ? classification.derivedBreed : bird.breed;
     const birdKey = bird.name.trim().toLowerCase();
     const pairingHistory = pairingsFor(bird, breedingPairs).map((pairing) => {
       const birdIsSire =
@@ -347,7 +402,8 @@ export default function FowlDetailsModal({
       { label: 'Gender', value: sexLabel(bird) },
       {
         label: 'Breed / strain',
-        value: classification.type === 'Crossbred' ? classification.derivedBreed : bird.breed || '—',
+        value:
+          classification.type === 'Crossbred' ? classification.derivedBreed : bird.breed || '—',
       },
       { label: 'Breeding classification', value: classification.badgeLabel },
       {
@@ -475,13 +531,7 @@ export default function FowlDetailsModal({
   };
 
   return (
-    <Modal
-      open
-      onClose={() => setSelectedFowlForDetails(null)}
-      title="Individual Chicken Analytics & Match Logs"
-      icon={<Dna className="h-5 w-5" aria-hidden="true" />}
-      className="max-w-2xl"
-    >
+    <FowlDetailsShell presentation={presentation} onClose={() => setSelectedFowlForDetails(null)}>
       <BloodlineReportCard fowl={selectedFowlForDetails} />
 
       <BloodlineBreakdown
@@ -511,13 +561,13 @@ export default function FowlDetailsModal({
           photoThumbPath={selectedFowlForDetails.photo_thumb_path}
           size={96}
           fit="contain"
-          className="h-24 w-24 rounded-md border border-slate-200 bg-white shadow-inner dark:border-border dark:bg-card"
+          className="dark:border-border dark:bg-card h-24 w-24 rounded-md border border-slate-200 bg-white shadow-inner"
           fallback={
             <span className="text-muted-foreground font-mono text-xs font-bold">NO PHOTO</span>
           }
         />
-        <div className="min-w-0 max-w-full flex-1 space-y-1.5 text-center sm:text-left">
-          <div className="flex min-w-0 max-w-full flex-wrap items-center justify-center gap-2 sm:justify-start">
+        <div className="max-w-full min-w-0 flex-1 space-y-1.5 text-center sm:text-left">
+          <div className="flex max-w-full min-w-0 flex-wrap items-center justify-center gap-2 sm:justify-start">
             <h4 className="dark:text-card-foreground text-lg font-black text-slate-900">
               {selectedFowlForDetails.name}
             </h4>
@@ -609,7 +659,7 @@ export default function FowlDetailsModal({
             })()}
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2 text-xs sm:justify-start">
-            <span className="text-muted-foreground font-black uppercase tracking-widest">
+            <span className="text-muted-foreground font-black tracking-widest uppercase">
               Overall (all time)
             </span>
             {canFight(selectedFowlForDetails) ? (
@@ -819,10 +869,10 @@ export default function FowlDetailsModal({
             !selectedFowlForDetails.photo_path &&
             !selectedFowlForDetails.photo_thumb_path &&
             galleryPhotos.length === 0 && (
-            <p className="text-muted-foreground text-xs font-semibold">
-              No photos yet — add the first one.
-            </p>
-          )}
+              <p className="text-muted-foreground text-xs font-semibold">
+                No photos yet — add the first one.
+              </p>
+            )}
         </div>
       </div>
 
@@ -1438,9 +1488,7 @@ export default function FowlDetailsModal({
           .filter((s) => s.stats.decided > 0)
           .sort((a, b) => (a.stats.winRate ?? -1) - (b.stats.winRate ?? -1))[0];
 
-        const formatStats = (s: ChickenMatchStats) => (
-          <WinRatePill stats={s} showNoFights />
-        );
+        const formatStats = (s: ChickenMatchStats) => <WinRatePill stats={s} showNoFights />;
 
         const toneBadge = (relation: string) => {
           if (relation === 'Full Sibling')
@@ -1707,51 +1755,51 @@ export default function FowlDetailsModal({
         return (
           <div className="space-y-4">
             <div className="space-y-3 rounded-lg border border-slate-700/60 bg-gradient-to-br from-slate-900 to-slate-800 p-4 text-white shadow-sm">
-              <h4 className="text-success flex items-center justify-between border-b border-slate-700/80 pb-2 text-xs font-black tracking-widest uppercase">
+              <h4 className="flex items-center justify-between border-b border-slate-700/80 pb-2 text-xs font-black tracking-widest text-emerald-300 uppercase">
                 <span className="flex items-center gap-1.5">
                   <Swords className="h-3.5 w-3.5" aria-hidden="true" />
                   Combat Analytics &amp; Performance Vectors
                 </span>
-                <span className="text-success rounded border border-emerald-800 bg-emerald-950/60 px-2 py-0.5 font-mono">
+                <span className="rounded border border-emerald-600/60 bg-emerald-950/70 px-2 py-0.5 font-mono text-emerald-200">
                   CHICKEN ID: #{selectedFowlForDetails.id}
                 </span>
               </h4>
               <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-5">
                 <div className="rounded-md border border-slate-700/60 bg-slate-800/80 p-2.5">
-                  <span className="text-muted-foreground block text-xs font-bold uppercase">
+                  <span className="block text-xs font-bold text-slate-300 uppercase">
                     Total Fights
                   </span>
                   <strong className="text-base font-black text-white">{totalFights}</strong>
                 </div>
                 <div className="rounded-md border border-emerald-700/40 bg-emerald-950/40 p-2.5">
-                  <span className="text-success block text-xs font-bold uppercase">Wins</span>
-                  <strong className="text-success flex items-center gap-1 text-base font-black">
+                  <span className="block text-xs font-bold text-emerald-300 uppercase">Wins</span>
+                  <strong className="flex items-center gap-1 text-base font-black text-emerald-300">
                     {wins}
                     <Trophy className="h-3.5 w-3.5" aria-hidden="true" />
                   </strong>
                 </div>
                 <div className="rounded-md border border-rose-700/40 bg-rose-950/40 p-2.5">
-                  <span className="text-danger block text-xs font-bold uppercase">Losses</span>
-                  <strong className="text-danger flex items-center gap-1 text-base font-black">
+                  <span className="block text-xs font-bold text-rose-300 uppercase">Losses</span>
+                  <strong className="flex items-center gap-1 text-base font-black text-rose-300">
                     {losses}
                     <Skull className="h-3.5 w-3.5" aria-hidden="true" />
                   </strong>
                 </div>
                 <div className="rounded-md border border-amber-700/40 bg-amber-950/40 p-2.5">
-                  <span className="text-warning block text-xs font-bold uppercase">Draws</span>
-                  <strong className="text-warning flex items-center gap-1 text-base font-black">
+                  <span className="block text-xs font-bold text-amber-300 uppercase">Draws</span>
+                  <strong className="flex items-center gap-1 text-base font-black text-amber-300">
                     {draws}
                     <Handshake className="h-3.5 w-3.5" aria-hidden="true" />
                   </strong>
                 </div>
                 <div className="col-span-2 rounded-md border border-teal-700/40 bg-teal-950/40 p-2.5 sm:col-span-1">
-                  <span className="text-teal block text-xs font-bold uppercase">
+                  <span className="block text-xs font-bold text-teal-200 uppercase">
                     Overall (all time)
                   </span>
-                  <strong className="text-teal text-base font-black">
+                  <strong className="text-base font-black text-teal-200">
                     {winRate === null ? '—%' : `${winRate}%`}
                   </strong>
-                  <span className="text-muted-foreground block font-mono text-xs font-semibold">
+                  <span className="block font-mono text-xs font-semibold text-slate-300">
                     {wins}W - {losses}L
                     {record.isLowSample ? ` · ${record.sampleNote?.toUpperCase()}` : ''}
                   </span>
@@ -2193,7 +2241,11 @@ export default function FowlDetailsModal({
                   <span
                     className={`rounded-full px-1.5 py-0.5 text-xs font-black uppercase ${isRegistered ? 'border border-sky-200 bg-sky-100 text-sky-700 dark:border-sky-800' : isFoundation ? 'dark:bg-muted text-muted-foreground dark:border-border border border-slate-200 bg-slate-100' : 'border border-amber-200 bg-amber-100 text-amber-700 dark:border-amber-800 dark:bg-amber-900/50 dark:text-amber-300'}`}
                   >
-                    {isRegistered ? t('registry.registered') : isFoundation ? t('registry.unknownParents') : t('registry.externalUnregistered')}
+                    {isRegistered
+                      ? t('registry.registered')
+                      : isFoundation
+                        ? t('registry.unknownParents')
+                        : t('registry.externalUnregistered')}
                   </span>
                 );
               })()}
@@ -2257,7 +2309,11 @@ export default function FowlDetailsModal({
                   <span
                     className={`rounded-full px-1.5 py-0.5 text-xs font-black uppercase ${isRegistered ? 'text-pink border border-pink-200 bg-pink-100 dark:border-pink-800' : isFoundation ? 'dark:bg-muted text-muted-foreground dark:border-border border border-slate-200 bg-slate-100' : 'border border-amber-200 bg-amber-100 text-amber-700 dark:border-amber-800 dark:bg-amber-900/50 dark:text-amber-300'}`}
                   >
-                    {isRegistered ? t('registry.registered') : isFoundation ? t('registry.unknownParents') : t('registry.externalUnregistered')}
+                    {isRegistered
+                      ? t('registry.registered')
+                      : isFoundation
+                        ? t('registry.unknownParents')
+                        : t('registry.externalUnregistered')}
                   </span>
                 );
               })()}
@@ -2405,6 +2461,6 @@ export default function FowlDetailsModal({
           </strong>
         </div>
       </div>
-    </Modal>
+    </FowlDetailsShell>
   );
 }

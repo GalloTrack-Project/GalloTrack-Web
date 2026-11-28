@@ -76,7 +76,7 @@ export default function BrandingPanel() {
           className="object-cover object-center opacity-40 blur-[2px]"
         />
         <div className="from-sidebar-end/95 via-sidebar/85 to-sidebar-active/45 absolute inset-0 bg-gradient-to-br" />
-        <div className="absolute -top-24 right-[-10%] h-96 w-96 rounded-full bg-brand-orange/25 blur-3xl" />
+        <div className="bg-brand-orange/25 absolute -top-24 right-[-10%] h-96 w-96 rounded-full blur-3xl" />
       </div>
 
       <div className="relative z-30 flex flex-1 flex-col">
@@ -101,7 +101,7 @@ export default function BrandingPanel() {
             <CompactLanguageSwitcher variant="glass" />
             <Link
               href="/"
-              className="focus-visible:ring-brand-gold border-white/60 bg-white/10 hover:bg-white/20 inline-flex min-h-11 items-center gap-2 rounded-full border-[1.5px] px-4 text-sm font-bold text-white backdrop-blur-md transition-colors focus-visible:ring-2 focus-visible:outline-none"
+              className="focus-visible:ring-brand-gold inline-flex min-h-11 items-center gap-2 rounded-full border-[1.5px] border-white/60 bg-white/10 px-4 text-sm font-bold text-white backdrop-blur-md transition-colors hover:bg-white/20 focus-visible:ring-2 focus-visible:outline-none"
             >
               <Home className="h-4 w-4" aria-hidden="true" />
               <span>{t('auth.backHome')}</span>
@@ -112,7 +112,7 @@ export default function BrandingPanel() {
                 onClick={() => setTheme(isDark ? 'light' : 'dark')}
                 aria-label={isDark ? t('header.switchToLight') : t('header.switchToDark')}
                 title={isDark ? t('header.switchToLight') : t('header.switchToDark')}
-                className="focus-visible:ring-brand-gold border-white/60 bg-white/10 hover:bg-white/20 inline-flex h-11 w-11 items-center justify-center rounded-full border-[1.5px] text-white backdrop-blur-md transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                className="focus-visible:ring-brand-gold inline-flex h-11 w-11 items-center justify-center rounded-full border-[1.5px] border-white/60 bg-white/10 text-white backdrop-blur-md transition-colors hover:bg-white/20 focus-visible:ring-2 focus-visible:outline-none"
               >
                 {isDark ? (
                   <Sun className="h-4 w-4" aria-hidden="true" />
@@ -149,7 +149,7 @@ export default function BrandingPanel() {
           </div>
         </div>
 
-        <p className="relative z-30 mt-auto hidden items-center gap-2 text-xs font-medium text-white/75 lg:flex">
+        <p className="relative z-30 mt-auto hidden w-fit max-w-full items-center gap-2 rounded-full border border-white/15 bg-black/45 px-3 py-1.5 text-xs font-semibold text-white shadow-sm backdrop-blur-sm lg:inline-flex">
           <ShieldCheck className="text-brand-gold h-4 w-4 shrink-0" aria-hidden="true" />
           <span className="break-words">
             {t('landing.footerCapstone')} · {t('auth.capstoneTagline')}
@@ -161,7 +161,7 @@ export default function BrandingPanel() {
         <div className="about-hero-rooster">
           <AboutRooster
             label={t('landing.aboutRoosterAlt')}
-            className="drop-shadow-[0_30px_40px_rgba(0,0,0,0.35)] h-auto w-full"
+            className="h-auto w-full drop-shadow-[0_30px_40px_rgba(0,0,0,0.35)]"
           />
         </div>
       </div>

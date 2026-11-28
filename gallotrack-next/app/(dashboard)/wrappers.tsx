@@ -83,7 +83,15 @@ export function BreedingHubWrapper() {
 export function ModalsWrapper() {
   const store = useFowl();
   const ui = useUI();
+  const router = useRouter();
   const { breedsViewOpen, openBreeds } = useBreedsView();
+  const { selectedFowlForDetails, setSelectedFowlForDetails } = ui;
+
+  React.useEffect(() => {
+    if (!selectedFowlForDetails) return;
+    setSelectedFowlForDetails(null);
+    router.push(`/lineage/chicken/${selectedFowlForDetails.id}`);
+  }, [selectedFowlForDetails, setSelectedFowlForDetails, router]);
 
   const handleAddBreedsFromEdit = () => {
     if (!ui.editingFowl) return;
@@ -111,7 +119,7 @@ export function ModalsWrapper() {
   const canCreateBreed = !authChecked || (Boolean(currentUserId) && userActive);
   return (
     <Modals
-      selectedFowlForDetails={ui.selectedFowlForDetails}
+      selectedFowlForDetails={null}
       setSelectedFowlForDetails={ui.setSelectedFowlForDetails}
       selectedFowlForDeceased={ui.selectedFowlForDeceased}
       setSelectedFowlForDeceased={ui.setSelectedFowlForDeceased}
@@ -161,9 +169,7 @@ export function ModalsWrapper() {
       getAgeMetrics={store.getAgeMetrics}
       generationOf={store.generationOf}
       generationPurity={store.generationPurity}
-      canEditPhoto={
-        !ui.editingFowl?.user_id || String(ui.editingFowl.user_id) === currentUserId
-      }
+      canEditPhoto={!ui.editingFowl?.user_id || String(ui.editingFowl.user_id) === currentUserId}
       generationInfo={store.generationInfo}
       bloodlineOf={store.bloodlineOf}
       getSiblingRelations={store.getSiblingRelations}

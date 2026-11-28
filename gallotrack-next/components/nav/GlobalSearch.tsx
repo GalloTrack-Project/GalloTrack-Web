@@ -168,8 +168,8 @@ export default function GlobalSearch({ triggerClassName }: { triggerClassName?: 
         )}
       >
         <Search className="h-4 w-4" aria-hidden="true" />
-        <span className="hidden text-sm font-medium lg:inline">Search</span>
-        <kbd className="border-border bg-background text-muted-foreground hidden items-center gap-0.5 rounded-sm border px-1.5 py-0.5 font-mono text-xs font-semibold lg:inline-flex">
+        <span className="hidden text-sm font-medium 2xl:inline">Search</span>
+        <kbd className="border-border bg-background text-muted-foreground hidden items-center gap-0.5 rounded-sm border px-1.5 py-0.5 font-mono text-xs font-semibold 2xl:inline-flex">
           <Command className="h-2.5 w-2.5" aria-hidden="true" />K
         </kbd>
       </button>

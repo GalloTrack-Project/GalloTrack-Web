@@ -46,7 +46,7 @@ export default function DashboardHeaderActions() {
 
   return (
     <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-      <div className="hidden lg:block">
+      <div className="hidden min-[1400px]:block">
         <DateRangePicker
           label={dateRangeLabel}
           preset={dateRangePreset}
@@ -116,7 +116,10 @@ export default function DashboardHeaderActions() {
               disabled={loading}
               className="hover:bg-muted flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 text-left text-xs font-bold disabled:opacity-50"
             >
-              <RefreshCw className={loading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} aria-hidden="true" />
+              <RefreshCw
+                className={loading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'}
+                aria-hidden="true"
+              />
               {loading ? t('heritage.syncing') : t('heritage.syncData')}
             </button>
           </div>
