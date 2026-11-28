@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useRef } from 'react';
-import { Archive, Skull, Dna, Shield, Egg, Plus } from 'lucide-react';
+import RegistryPageHeader from '@/components/registry/RegistryPageHeader';
+import RegistryFooterWave from '@/components/registry/RegistryFooterWave';
 import ChickenIcon from '@/components/ChickenIcon';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import { useUI } from '@/lib/contexts/ui-context';
@@ -263,71 +264,15 @@ export default function ProfilingPage() {
 
   return (
     <div className="animate-fadeIn space-y-5 pb-24 md:pb-6">
-      <div className="border-border bg-card/70 flex flex-col gap-5 rounded-lg border p-6 sm:p-7">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex min-w-0 flex-1 items-start gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-emerald-500/30 bg-emerald-500/15 shadow-inner">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-success"
-              >
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              </svg>
-            </div>
-            <div className="min-w-0 flex-1">
-              <h1 className="text-card-foreground text-xl font-black tracking-tight sm:text-2xl">
-                {t('registry.title')}
-              </h1>
-              <p className="text-muted-foreground mt-0.5 text-sm font-semibold">
-                {t('registry.subtitle')}
-              </p>
-            </div>
-          </div>
-          <div className="flex w-full min-w-0 items-stretch gap-2.5 sm:w-auto sm:shrink-0 sm:items-center sm:self-start">
-            <button
-              type="button"
-              onClick={handleOpenBreedsHeader}
-              className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md px-3.5 py-2.5 text-center text-xs leading-tight font-bold transition-colors duration-200 sm:flex-initial sm:text-sm ${
-                breedsViewOpen
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'bg-muted border-border text-muted-foreground hover:text-success border hover:border-emerald-500/50'
-              }`}
-            >
-              <Dna className="h-4 w-4" />
-              <span>{t('registry.breedsBtn')}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => selectProfilingTab(formViewActive ? 'males' : 'form')}
-              className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md px-4 py-2.5 text-center text-xs leading-tight font-bold shadow-sm transition-all duration-200 sm:flex-initial sm:text-sm ${
-                formViewActive
-                  ? 'bg-slate-700 text-white ring-1 ring-slate-600 hover:bg-slate-800'
-                  : 'bg-emerald-600 text-white hover:bg-emerald-700'
-              }`}
-            >
-              <Plus className="h-4 w-4" />
-              <span>
-                {formViewActive
-                  ? t('registry.viewRegistryBtn')
-                  : t('registry.registerChickenBtn')}
-              </span>
-            </button>
-          </div>
-        </div>
+      <RegistryPageHeader
+        onOpenBreeds={handleOpenBreedsHeader}
+        onRegister={() => selectProfilingTab('form')}
+        registerActive={formViewActive}
+      />
 
+      <div className="relative z-10 -mt-2 px-1 sm:px-2">
         <RegistryNav
-          currentTab={profilingSubTab}
+          currentTab={formViewActive ? 'males' : profilingSubTab}
           onSelectTab={selectProfilingTab}
           counts={{
             males: registryCounts.breedingMales,
@@ -451,6 +396,8 @@ export default function ProfilingPage() {
           onBreedCreated={ui.breedFlow ? handleBreedCreated : undefined}
         />
       )}
+
+      <RegistryFooterWave />
     </div>
   );
 }

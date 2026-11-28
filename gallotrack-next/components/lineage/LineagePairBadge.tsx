@@ -3,6 +3,7 @@
 import React from 'react';
 import { Link2 } from 'lucide-react';
 import type { CrisscrossClassification } from '@/lib/lineage';
+import { useT } from '@/lib/i18n';
 
 export interface LineagePairBadgeProps {
   sireName: string;
@@ -27,27 +28,40 @@ export default function LineagePairBadge({
   style,
   testId = 'lineage-pair-hub',
 }: LineagePairBadgeProps) {
+  const t = useT();
+  const label = t('lineageDirectory.pairLabel', {
+    sire: sireName,
+    dam: damName,
+    count: childCount,
+  });
+
   return (
     <button
       type="button"
       data-testid={testId}
       onClick={onClick}
-      aria-label={`Breeding pair ${sireName} × ${damName}, ${childCount} offspring${
-        crisscross?.isCrisscross ? `. CRISSCROSS: ${crisscross.reason}` : ''
-      }`}
+      aria-label={`${t('lineageDirectory.pairAria', {
+        sire: sireName,
+        dam: damName,
+        count: childCount,
+      })}${crisscross?.isCrisscross ? `. CRISSCROSS: ${crisscross.reason}` : ''}`}
       aria-pressed={isSelected}
-      title={`Breeding pair: ${sireName} × ${damName}${
-        crisscross?.isCrisscross ? ` · CRISSCROSS: ${crisscross.reason}` : ''
-      }`}
-      className={`bg-card inline-flex cursor-pointer items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tracking-wider uppercase shadow-xs focus-visible:ring-2 focus-visible:ring-emerald-500/60 focus-visible:outline-none ${
+      title={`${label}${crisscross?.isCrisscross ? ` · CRISSCROSS: ${crisscross.reason}` : ''}`}
+      className={`border-low-sample/35 bg-low-sample-bg text-low-sample relative inline-flex max-w-[15rem] cursor-pointer items-center gap-1 rounded-full border px-2 py-1 text-[9px] font-black shadow-sm focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none ${
         isSelected
-          ? 'border-emerald-500 text-emerald-700 ring-2 ring-emerald-500/30 dark:text-emerald-400'
-          : 'border-border text-muted-foreground hover:border-emerald-400 hover:text-foreground'
+          ? 'ring-2 ring-brand-orange/55'
+          : 'hover:border-brand-orange/60 hover:bg-accent-soft'
       } ${className}`}
       style={style}
     >
-      <Link2 className="h-3 w-3" aria-hidden="true" />
-      {childCount}
+      <Link2 className="h-3 w-3 shrink-0" aria-hidden="true" />
+      <span className="truncate">
+        {sireName} × {damName} · {childCount}
+      </span>
+      <span
+        aria-hidden="true"
+        className="bg-low-sample absolute bottom-[-5px] left-1/2 h-2 w-2 -translate-x-1/2 rounded-full ring-2 ring-card"
+      />
     </button>
   );
 }

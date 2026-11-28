@@ -6,32 +6,69 @@
 :root {
   color-scheme: light;
 
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --card-foreground: #0f172a;
+  --background: #fff8ed;
+  --surface: #fffdf8;
+  --surface-raised: #ffffff;
+  --foreground: #2a1712;
+  --text: #2a1712;
+  --text-muted: #6b4a3b;
+  --card: #fffdf8;
+  --card-foreground: #2a1712;
   --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --border: #e2e8f0;
-  --input: #cbd5e1;
-  --input-border: #6b7c93;
+  --popover-foreground: #2a1712;
+  --muted: #f7e9da;
+  --muted-foreground: #6b4a3b;
+  --border: #e5cdb8;
+  --input: #ffffff;
+  --input-border: #8a5a4a;
 
-  --success: #065f46;
-  --warning: #92400e;
-  --danger: #9f1239;
-  --info: #075985;
-  --primary: #065f46;
+  --brand: #a80f17;
+  --brand-strong: #7a0910;
+  --brand-foreground: #ffffff;
+  --primary: #a80f17;
   --primary-foreground: #ffffff;
+  --accent-gold: #b45309;
+  --accent-gold-soft: #fcebc1;
+  --success: #166534;
+  --warning: #92400e;
+  --danger: #7f1d1d;
   --danger-foreground: #ffffff;
+  --info: #1d4ed8;
+  --focus-ring: #b45309;
+  --ring: #b45309;
+  --accent: #b45309;
+  --accent-foreground: #ffffff;
+  --accent-soft: #fcebc1;
   --teal: #115e59;
   --pink: #9d174d;
   --violet: #6d28d9;
   --indigo: #4338ca;
-  --ring: #0f172a;
-  --accent: #065f46;
-  --accent-foreground: #ffffff;
+
+  --sidebar-gradient-from: #65070b;
+  --sidebar-gradient-via: #8b0e14;
+  --sidebar-gradient-to: #b01218;
+  --sidebar: #65070b;
+  --sidebar-end: #b01218;
+  --sidebar-foreground: #ffffff;
+  --sidebar-muted: #ffe8de;
+  --sidebar-active: #c2410c;
+  --sidebar-active-foreground: #ffffff;
+  --brand-orange: #b45309;
+  --hero-start: #65070b;
+  --hero-mid: #a80f17;
+  --hero-end: #b45309;
+  --win: #166534;
+  --win-bg: #dcfce7;
+  --loss: #7f1d1d;
+  --loss-bg: #fee2e2;
+  --draw: #475569;
+  --draw-bg: #e2e8f0;
+  --low-sample: #92400e;
+  --low-sample-bg: #fef3c7;
+  --cock: #1d4ed8;
+  --cock-bg: #dbeafe;
+  --hen: #be185d;
+  --hen-bg: #fce7f3;
 
   --duration-fast: 150ms;
   --duration-base: 200ms;
@@ -40,7 +77,6 @@
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
 }
-
 html {
   scroll-behavior: smooth;
 }
@@ -60,34 +96,70 @@ html:has(.match-form-scroll) {
 .dark {
   color-scheme: dark;
 
-  --background: #090d16;
-  --foreground: #e2e8f0;
-  --card: #0f172a;
-  --card-foreground: #e2e8f0;
-  --popover: #0f172a;
-  --popover-foreground: #e2e8f0;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
-  --border: #1e293b;
-  --input: #1e293b;
-  --input-border: #64748b;
+  --background: #140b09;
+  --surface: #1f1311;
+  --surface-raised: #2a1916;
+  --foreground: #fbefe9;
+  --text: #fbefe9;
+  --text-muted: #d6bdb1;
+  --card: #1f1311;
+  --card-foreground: #fbefe9;
+  --popover: #2a1916;
+  --popover-foreground: #fbefe9;
+  --muted: #2a1916;
+  --muted-foreground: #d6bdb1;
+  --border: #4a2c24;
+  --input: #2a1916;
+  --input-border: #a97866;
 
-  --success: #4ade80;
-  --warning: #fbbf24;
+  --brand: #c21a1a;
+  --brand-strong: #8f1016;
+  --brand-foreground: #ffffff;
+  --primary: #fca5a5;
+  --primary-foreground: #1a0b07;
+  --accent-gold: #fcd34d;
+  --accent-gold-soft: #3a2406;
+  --success: #86efac;
+  --warning: #fcd34d;
   --danger: #fda4af;
-  --info: #7dd3fc;
-  --primary: #10b981;
-  --primary-foreground: #04210f;
   --danger-foreground: #4c0519;
+  --info: #93c5fd;
+  --focus-ring: #fcd34d;
+  --ring: #fcd34d;
+  --accent: #fcd34d;
+  --accent-foreground: #1a0b07;
+  --accent-soft: #3a2406;
   --teal: #5eead4;
   --pink: #f9a8d4;
   --violet: #c4b5fd;
   --indigo: #a5b4fc;
-  --ring: #e2e8f0;
-  --accent: #10b981;
-  --accent-foreground: #04210f;
-}
 
+  --sidebar-gradient-from: #3b0407;
+  --sidebar-gradient-via: #6e090e;
+  --sidebar-gradient-to: #9b1016;
+  --sidebar: #3b0407;
+  --sidebar-end: #9b1016;
+  --sidebar-foreground: #fff7f2;
+  --sidebar-muted: #e8c9bb;
+  --sidebar-active: #f0b429;
+  --sidebar-active-foreground: #1a0b07;
+  --brand-orange: #fcd34d;
+  --hero-start: #3b0407;
+  --hero-mid: #8f1016;
+  --hero-end: #c21a1a;
+  --win: #86efac;
+  --win-bg: #14351f;
+  --loss: #fda4af;
+  --loss-bg: #4c0519;
+  --draw: #cbd5e1;
+  --draw-bg: #1e293b;
+  --low-sample: #fcd34d;
+  --low-sample-bg: #3a2406;
+  --cock: #93c5fd;
+  --cock-bg: #172554;
+  --hen: #f9a8d4;
+  --hen-bg: #500724;
+}
 /* ROLE ACCENT — the shell sets data-role; owner inherits the primary green,
    admin swaps to amber. Contrast verified: white on #b45309 = 5.02:1,
    #04210f on #fbbf24 = 10.23:1. */
@@ -103,6 +175,19 @@ html:has(.match-form-scroll) {
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-accent-gold: var(--accent-gold);
+  --color-accent-gold-soft: var(--accent-gold-soft);
+  --color-focus-ring: var(--focus-ring);
+  --color-sidebar-gradient-from: var(--sidebar-gradient-from);
+  --color-sidebar-gradient-via: var(--sidebar-gradient-via);
+  --color-sidebar-gradient-to: var(--sidebar-gradient-to);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
@@ -127,6 +212,31 @@ html:has(.match-form-scroll) {
   --color-ring: var(--ring);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-end: var(--sidebar-end);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-active-foreground: var(--sidebar-active-foreground);
+  --color-brand-orange: var(--brand-orange);
+  --color-brand-red: var(--brand-red);
+  --color-brand-gold: var(--brand-gold);
+  --color-hero-start: var(--hero-start);
+  --color-hero-mid: var(--hero-mid);
+  --color-hero-end: var(--hero-end);
+  --color-win: var(--win);
+  --color-win-bg: var(--win-bg);
+  --color-loss: var(--loss);
+  --color-loss-bg: var(--loss-bg);
+  --color-draw: var(--draw);
+  --color-draw-bg: var(--draw-bg);
+  --color-low-sample: var(--low-sample);
+  --color-low-sample-bg: var(--low-sample-bg);
+  --color-cock: var(--cock);
+  --color-cock-bg: var(--cock-bg);
+  --color-hen: var(--hen);
+  --color-hen-bg: var(--hen-bg);
 
   /* Radius scale: three semantic sizes. sm = controls, md = cards/panels/modals,
      lg = large blocks. xl/2xl/3xl/4xl are pinned onto the same scale as a safety
@@ -151,12 +261,22 @@ html:has(.match-form-scroll) {
   --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
 
   --font-sans: var(--font-geist-sans);
+  --font-display: var(--font-manrope);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+}
+
+h1,
+h2,
+h3,
+h4,
+.font-display {
+  font-family: var(--font-manrope), var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 /* ANTI-GRAVITY FLOATING VISUAL EFFECTS */
@@ -273,6 +393,89 @@ body {
 }
 
 /* TOAST SLIDE-IN ANIMATION */
+@keyframes landingStepIn {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing-step-in {
+  animation: landingStepIn 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes aboutHeroCopyIn {
+  from {
+    opacity: 0;
+    transform: translateX(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes aboutHeroRoosterIn {
+  from {
+    opacity: 0;
+    transform: translateX(-48px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.about-hero-copy {
+  animation: aboutHeroCopyIn 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.about-hero-rooster {
+  animation: aboutHeroRoosterIn 850ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes authCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes authErrorShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  50% {
+    transform: translateX(4px);
+  }
+  75% {
+    transform: translateX(-2px);
+  }
+}
+
+.auth-card-in {
+  animation: authCardIn 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.auth-error-shake {
+  animation: authErrorShake 320ms ease-in-out both;
+}
+
+.auth-wave-float {
+  animation: float-subtle 9s ease-in-out infinite;
+}
+
 @keyframes slideInRight {
   0% {
     opacity: 0;

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { BadgeCheck, GitBranch, ListChecks } from 'lucide-react';
+import { BadgeCheck, GitBranch, ListChecks, ShieldCheck, Tag } from 'lucide-react';
 import { useT } from '@/lib/i18n';
 import { cn } from '@/components/ui/utils';
 import { MissingFieldsList } from './MissingFieldsList';
@@ -24,6 +24,8 @@ export type ValidationSummaryPanelProps = {
   registerHelper: string;
   /** Optional secondary action (e.g. Cancel) rendered below the register helper. */
   footer?: React.ReactNode;
+  /** Pin the submit/cancel controls to the viewport for long forms. */
+  stickyActions?: boolean;
 };
 
 export function ValidationSummaryPanel({
@@ -41,6 +43,7 @@ export function ValidationSummaryPanel({
   registerLabel,
   registerHelper,
   footer,
+  stickyActions = false,
 }: ValidationSummaryPanelProps) {
   const { t } = useT();
   const completed = requiredFields.filter((field) => field.complete).length;
@@ -52,26 +55,66 @@ export function ValidationSummaryPanel({
     total: String(total),
   });
 
+  const submitButton = (
+    <button
+      type="submit"
+      disabled={registerDisabled || registerBusy}
+      aria-busy={registerBusy}
+      aria-describedby="registration-status"
+      className={cn(
+        'focus-visible:ring-ring focus-visible:ring-offset-background flex min-h-[58px] w-full items-center justify-center gap-2 rounded-full px-4 py-3.5 text-sm font-black tracking-widest uppercase transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
+        stickyActions && 'sm:w-auto sm:min-w-56',
+        registerDisabled || registerBusy
+          ? 'border-border bg-muted text-muted-foreground cursor-not-allowed border'
+          : 'from-sidebar to-sidebar-active cursor-pointer bg-gradient-to-r text-white shadow-lg shadow-primary/25 hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.99]',
+      )}
+    >
+      {registerBusy ? (
+        <span
+          className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+          aria-hidden="true"
+        />
+      ) : null}
+      <span>{registerLabel}</span>
+    </button>
+  );
+
+  const statusText = (
+    <p
+      id="registration-status"
+      role="status"
+      aria-live="polite"
+      className={cn(
+        'text-center text-xs font-semibold break-words',
+        stickyActions && 'order-2 sm:order-1 sm:flex-1 sm:text-left',
+        registerDisabled || registerBusy ? 'text-warning' : 'text-muted-foreground',
+      )}
+    >
+      {registerHelper}
+    </p>
+  );
+
+  const footerNode = footer ? (
+    <div className={cn('pt-1', stickyActions && 'w-full sm:w-40 sm:shrink-0 sm:pt-0 [&>button]:w-full')}>
+      {footer}
+    </div>
+  ) : null;
+
   return (
     <section
       data-testid="validation-summary-panel"
-      className="min-w-0 overflow-hidden rounded-lg border-2 border-slate-900 bg-white p-4 shadow-sm sm:p-5 dark:border-border dark:bg-card"
+      className="bg-card border-primary/10 min-w-0 overflow-hidden rounded-[20px] border p-4 shadow-lg shadow-primary/5 sm:p-5"
     >
-      <div className="mb-4 flex min-w-0 flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-emerald-500" />
-          <h3 className="min-w-0 text-xs font-black tracking-widest break-words text-muted-foreground uppercase">
-            {t('registry.validationSummaryPanel')}
-          </h3>
-        </div>
-        <span className="self-start rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-xs font-black break-words text-emerald-700 sm:self-auto dark:border-emerald-900/60 dark:bg-emerald-950/50 dark:text-emerald-300">
-          {t('registry.nextIdLabel', { id: nextIdLabel })}
-        </span>
+      <div className="mb-4 flex min-w-0 items-center gap-2">
+        <ShieldCheck className="text-brand-red h-4 w-4 shrink-0" aria-hidden="true" />
+        <h3 className="text-brand-red min-w-0 text-xs font-black tracking-widest break-words uppercase">
+          {t('registry.validationSummaryPanel')}
+        </h3>
       </div>
 
       <div
         data-testid="validation-summary-grid"
-        className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-3"
+        className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"
       >
         <StatusCard
           icon={<ListChecks className="h-4 w-4" />}
@@ -92,8 +135,7 @@ export function ValidationSummaryPanel({
             <div className="h-2.5 w-full overflow-hidden rounded-full border border-border bg-muted">
               <div
                 className={cn(
-                  'h-full rounded-full transition-[width] duration-300',
-                  allComplete ? 'bg-success' : 'bg-warning',
+                  'from-brand-red to-brand-orange h-full rounded-full bg-gradient-to-r transition-[width] duration-300',
                 )}
                 style={{ width: `${percentage}%` }}
               />
@@ -116,47 +158,34 @@ export function ValidationSummaryPanel({
           helper={lineageHelper}
           live
         />
+
+        <StatusCard
+          icon={<Tag className="h-4 w-4" />}
+          title={t('registry.nextIdTitle')}
+          value={nextIdLabel}
+          helper={t('registry.nextIdLabel', { id: nextIdLabel })}
+        />
       </div>
 
       <MissingFieldsList items={requiredFields} />
 
-      <div className="mt-4 space-y-2">
-        <button
-          type="submit"
-          disabled={registerDisabled || registerBusy}
-          aria-busy={registerBusy}
-          aria-describedby="registration-status"
-          className={cn(
-            'flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg px-4 py-3.5 text-sm font-black tracking-widest uppercase transition-all',
-            'focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none',
-            registerDisabled || registerBusy
-              ? 'cursor-not-allowed border border-border bg-muted text-muted-foreground'
-              : 'cursor-pointer bg-slate-900 text-white shadow-md hover:bg-emerald-700 active:scale-[0.99]',
-          )}
-        >
-          {registerBusy ? (
-            <span
-              className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
-              aria-hidden="true"
-            />
-          ) : null}
-          <span>{registerLabel}</span>
-        </button>
-
-        <p
-          id="registration-status"
-          role="status"
-          aria-live="polite"
-          className={cn(
-            'text-center text-xs font-semibold break-words',
-            registerDisabled || registerBusy ? 'text-warning' : 'text-muted-foreground',
-          )}
-        >
-          {registerHelper}
-        </p>
-
-        {footer ? <div className="pt-1">{footer}</div> : null}
-      </div>
+      {stickyActions ? (
+        <div className="bg-card/95 border-primary/10 fixed inset-x-0 bottom-20 z-40 border-t px-4 py-3 shadow-[0_-18px_36px_-24px_rgba(0,0,0,0.35)] backdrop-blur md:bottom-0 md:left-64 md:px-6">
+          <div className="mx-auto flex max-w-5xl flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+            {statusText}
+            <div className="order-1 flex flex-col gap-2 sm:order-2 sm:flex-row sm:items-center">
+              {footerNode}
+              {submitButton}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4 space-y-2">
+          {submitButton}
+          {statusText}
+          {footerNode}
+        </div>
+      )}
     </section>
   );
 }

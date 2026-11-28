@@ -48,7 +48,13 @@ export function LanguageSelect({ className = '' }: { className?: string }) {
  * The button only opens the menu; the language changes when an option is
  * selected. State and persistence come from LanguageProvider (gt-lang cookie).
  */
-export function CompactLanguageSwitcher({ className = '' }: { className?: string }) {
+export function CompactLanguageSwitcher({
+  className = '',
+  variant = 'default',
+}: {
+  className?: string;
+  variant?: 'default' | 'glass';
+}) {
   const { language, setLanguage, languages, isBeta, t } = useLanguage();
   const [open, setOpen] = useState(false);
   const menuId = useId();
@@ -162,9 +168,20 @@ export function CompactLanguageSwitcher({ className = '' }: { className?: string
         title={`${t('header.languageSwitcher')}: ${currentOption?.nativeName}`}
         onClick={() => (open ? closeMenu(false) : openMenu())}
         onKeyDown={handleButtonKeyDown}
-        className="border-border bg-muted/50 hover:bg-muted text-foreground focus-visible:ring-accent focus-visible:ring-offset-card inline-flex min-h-[44px] shrink-0 cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs font-bold transition-colors select-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none sm:px-2.5"
+        className={cn(
+          'inline-flex min-h-[44px] shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition-colors select-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
+          variant === 'glass'
+            ? 'border-white/60 bg-white/10 text-white backdrop-blur-md hover:bg-white/20 focus-visible:ring-white'
+            : 'border-border bg-muted/50 text-foreground hover:bg-muted focus-visible:ring-accent focus-visible:ring-offset-card',
+        )}
       >
-        <Globe className="text-accent h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        <Globe
+          className={cn(
+            'h-3.5 w-3.5 shrink-0',
+            variant === 'glass' ? 'text-brand-gold' : 'text-accent',
+          )}
+          aria-hidden="true"
+        />
         <span className="hidden whitespace-nowrap md:inline">
           {currentOption?.nativeName ?? language.toUpperCase()}
         </span>

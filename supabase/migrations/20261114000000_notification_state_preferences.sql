@@ -71,6 +71,26 @@ CREATE POLICY "notification_preferences_owner_delete" ON public.notification_pre
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.notification_state TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.notification_preferences TO authenticated;
 
+REVOKE ALL ON public.notification_state FROM anon;
+REVOKE ALL ON public.notification_preferences FROM anon;
+
+CREATE OR REPLACE FUNCTION public.set_notification_preferences_updated_at()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+BEGIN
+  NEW.updated_at := now();
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS notification_preferences_set_updated_at ON public.notification_preferences;
+CREATE TRIGGER notification_preferences_set_updated_at
+  BEFORE INSERT OR UPDATE ON public.notification_preferences
+  FOR EACH ROW
+  EXECUTE FUNCTION public.set_notification_preferences_updated_at();
+
 COMMENT ON TABLE public.notification_state IS
   'Per-user read and dismissed state for client-derived milestone notifications.';
 COMMENT ON TABLE public.notification_preferences IS

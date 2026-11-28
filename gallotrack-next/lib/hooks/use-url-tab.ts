@@ -8,6 +8,8 @@ export type UseUrlTabOptions<T extends string> = {
   defaultValue: T;
   aliases?: Record<string, T>;
   legacyParams?: string[];
+  /** Use push so browser Back returns to the previous tab. Defaults to replace. */
+  history?: 'replace' | 'push';
 };
 
 /** How the current value came to be. 'mount' + paramPresent distinguishes
@@ -23,7 +25,7 @@ export type UrlTabMeta = {
 /**
  * Two-way URL <-> state sync for page tabs. Reads `?param=` on mount and on
  * popstate; invalid or missing values fall back to defaultValue. setValue
- * writes the param with router.replace({ scroll: false }) and preserves
+ * writes the param with router.replace or push ({ scroll: false }) and preserves
  * unrelated params. Uses window.location.search (like LineageDirectory)
  * instead of useSearchParams so statically prerendered pages need no
  * Suspense boundary.
@@ -34,6 +36,7 @@ export function useUrlTab<T extends string>({
   defaultValue,
   aliases,
   legacyParams,
+  history = 'replace',
 }: UseUrlTabOptions<T>): [T, (next: T) => void, UrlTabMeta] {
   const pathname = usePathname();
   const router = useRouter();
@@ -92,9 +95,11 @@ export function useUrlTab<T extends string>({
       if (next === defaultValue) params.delete(param);
       else params.set(param, next);
       const qs = params.toString();
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+      const href = qs ? `${pathname}?${qs}` : pathname;
+      if (history === 'push') router.push(href, { scroll: false });
+      else router.replace(href, { scroll: false });
     },
-    [param, pathname, router, defaultValue],
+    [param, pathname, router, defaultValue, history],
   );
 
   return [state.value, setValue, { paramPresent: state.paramPresent, change: state.change }];

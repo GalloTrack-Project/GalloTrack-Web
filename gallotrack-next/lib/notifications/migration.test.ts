@@ -20,7 +20,21 @@ describe('derived notification migration contract', () => {
     expect(migration).toContain('PRIMARY KEY (user_id, key)');
     expect(migration).toContain("settings   JSONB NOT NULL DEFAULT '{}'::jsonb");
     expect(migration).not.toMatch(/ALTER TABLE public\.fowl/i);
-    expect(migration).not.toContain('CREATE TRIGGER');
+  });
+
+  it('is safe to re-run and hardens anon access plus updated_at', () => {
+    expect(migration).toContain('DROP POLICY IF EXISTS');
+    expect(migration).toContain('REVOKE ALL ON public.notification_state FROM anon;');
+    expect(migration).toContain('REVOKE ALL ON public.notification_preferences FROM anon;');
+    expect(migration).toContain(
+      'CREATE OR REPLACE FUNCTION public.set_notification_preferences_updated_at()',
+    );
+    expect(migration).toContain(
+      'DROP TRIGGER IF EXISTS notification_preferences_set_updated_at ON public.notification_preferences;',
+    );
+    expect(migration).toMatch(
+      /CREATE TRIGGER notification_preferences_set_updated_at\s+BEFORE INSERT OR UPDATE ON public\.notification_preferences/,
+    );
   });
 
   it('enables owner-only RLS for select, insert, update and delete', () => {

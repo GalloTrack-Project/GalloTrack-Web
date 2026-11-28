@@ -282,7 +282,7 @@ describe('Add Breeds flow', () => {
     });
 
     await waitFor(() => expect(readCreateDraft()).not.toBeNull());
-    fireEvent.click(screen.getByRole('button', { name: /REGISTER/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^REGISTER$/i }));
 
     await waitFor(() => expect(sessionStorage.getItem(createKey())).toBeNull());
   });

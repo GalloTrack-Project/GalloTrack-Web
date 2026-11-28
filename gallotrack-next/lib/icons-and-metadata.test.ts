@@ -6,6 +6,7 @@ import sharp from 'sharp';
 vi.mock('next/font/google', () => ({
   Geist: () => ({ variable: '--font-geist-sans' }),
   Geist_Mono: () => ({ variable: '--font-geist-mono' }),
+  Manrope: () => ({ variable: '--font-manrope' }),
 }));
 
 import { metadata as layoutMetadata, viewport as layoutViewport } from '../app/layout';
@@ -109,7 +110,7 @@ describe('GalloTrack Favicon Suite & Metadata', () => {
       template: '%s | GalloTrack',
       default: 'GalloTrack | Gamefowl Breeding & Match Analytics',
     });
-    expect(layoutViewport.themeColor).toBe('#047857');
+    expect(layoutViewport.themeColor).toBe('#A80F17');
     expect(layoutMetadata.manifest).toBe('/manifest.json');
     const metadataIcons = layoutMetadata.icons;
     const iconList = Array.isArray(metadataIcons)

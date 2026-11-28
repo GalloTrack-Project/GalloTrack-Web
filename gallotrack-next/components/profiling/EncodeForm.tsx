@@ -831,11 +831,11 @@ export default function EncodeForm({
   const isCustomTrait = isCustomOption(newBehaviorTrait, baseTraitOptions.map((o) => o.value));
 
   return (
-    <form onSubmit={handleFormSubmit} className="space-y-5 animate-fadeIn">
+    <form onSubmit={handleFormSubmit} className="animate-fadeIn space-y-5 pb-48 md:pb-32">
       {draftNotice && (
         <div
           role="status"
-          className="flex items-start gap-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-emerald-800 dark:text-emerald-200"
+          className="flex items-start gap-2.5 rounded-lg border border-primary/25 bg-accent-soft p-3 text-brand-red dark:text-brand-red"
         >
           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <div className="min-w-0 flex-1">
@@ -848,19 +848,19 @@ export default function EncodeForm({
             type="button"
             onClick={() => setDraftNotice(null)}
             aria-label={t('registry.dismissDraftNotice')}
-            className="-m-1 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-500/15 dark:text-emerald-300"
+            className="-m-1 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-brand-red hover:bg-primary/10 dark:text-brand-red"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       )}
-      <div className="antigravity-hover bg-white dark:bg-card p-6 rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-4 relative z-30 overflow-visible">
-        <div className="flex items-center justify-between gap-2 border-b pb-2.5 border-slate-100 dark:border-border">
-          <h3 className="font-black text-sm text-emerald-700 dark:text-emerald-300 uppercase tracking-wider flex items-center space-x-2">
-            <span className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-black shrink-0">1</span>
+      <div className="bg-card border-border rounded-[20px] border p-6 shadow-lg shadow-primary/5 space-y-4 relative z-30 overflow-visible">
+        <div className="flex items-center justify-between gap-2 border-b pb-2.5 border-border">
+          <h3 className="font-black text-sm text-brand-red uppercase tracking-wider flex items-center space-x-2">
+            <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-black shrink-0">1</span>
             <span>{t('registry.step1Title')}</span>
           </h3>
-          <span className="text-xs font-mono bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 rounded-full font-black shrink-0">ID: {nextNodeId}</span>
+          <span className="text-xs font-mono bg-accent-soft text-brand-red border border-primary/20 px-2.5 py-1 rounded-full font-black shrink-0">ID: {nextNodeId}</span>
         </div>
         <div role="radiogroup" aria-label={t('registry.registrationTypeQuestion')} className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {([
@@ -871,10 +871,10 @@ export default function EncodeForm({
             return (
               <label
                 key={option.value}
-                className={`flex min-h-16 cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors focus-within:ring-2 focus-within:ring-emerald-500/60 ${
+                className={`flex min-h-16 cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors focus-within:ring-2 focus-within:ring-primary/40 ${
                   selected
-                    ? 'border-emerald-500 bg-emerald-50/70 dark:border-emerald-700 dark:bg-emerald-950/30'
-                    : 'border-border bg-card hover:border-emerald-300 dark:hover:border-emerald-800'
+                    ? 'border-primary bg-accent-soft'
+                    : 'border-border bg-card hover:border-primary/40'
                 }`}
               >
                 <input
@@ -883,7 +883,7 @@ export default function EncodeForm({
                   value={option.value}
                   checked={selected}
                   onChange={() => changeRegistrationType(option.value)}
-                  className="mt-1 h-4 w-4 shrink-0 cursor-pointer accent-emerald-600"
+                  className="mt-1 h-4 w-4 shrink-0 cursor-pointer accent-primary"
                 />
                 <span className="min-w-0">
                   <span className="text-foreground block text-sm font-black">{option.title}</span>
@@ -913,7 +913,7 @@ export default function EncodeForm({
                     event.preventDefault();
                     changeRegistrationType('new');
                   }}
-                  className="mt-1 inline-flex min-h-11 items-center text-xs font-black text-emerald-700 underline underline-offset-2 dark:text-emerald-300"
+                  className="mt-1 inline-flex min-h-11 items-center text-xs font-black text-brand-red underline underline-offset-2 dark:text-brand-red"
                 >
                   {t('registry.registerNewBirdFirstLink')}
                 </a>
@@ -984,7 +984,7 @@ export default function EncodeForm({
                   autoComplete="off"
                   spellCheck={false}
                   placeholder={t('registry.externalParentPlaceholder')}
-                  className="border-input-border bg-card text-foreground placeholder:text-muted-foreground min-h-11 w-full rounded-md border p-3 text-sm font-semibold focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                  className="border-input-border bg-card text-foreground placeholder:text-muted-foreground min-h-11 w-full rounded-md border p-3 text-sm font-semibold focus:border-primary focus:ring-4 focus:ring-primary/15"
                 />
               </div>
               <div>
@@ -999,7 +999,7 @@ export default function EncodeForm({
                   autoComplete="off"
                   spellCheck={false}
                   placeholder={t('registry.externalParentPlaceholder')}
-                  className="border-input-border bg-card text-foreground placeholder:text-muted-foreground min-h-11 w-full rounded-md border p-3 text-sm font-semibold focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                  className="border-input-border bg-card text-foreground placeholder:text-muted-foreground min-h-11 w-full rounded-md border p-3 text-sm font-semibold focus:border-primary focus:ring-4 focus:ring-primary/15"
                 />
               </div>
             </div>
@@ -1012,14 +1012,14 @@ export default function EncodeForm({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="identifier-name">{t('registry.identifierName')}</label>
-            <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-semibold" placeholder={t('registry.identifierPlaceholder')} required id="identifier-name" />
+            <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/15 transition-all font-semibold" placeholder={t('registry.identifierPlaceholder')} required id="identifier-name" />
           </div>
           <div>
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="gender-class">{t('registry.genderClass')}</label>
             <select
               value={newGender}
               onChange={(e) => changeGender(e.target.value)}
-              className={`w-full p-3 border border-input-border rounded-md text-sm bg-muted font-extrabold focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer ${newGender ? 'text-foreground' : 'text-muted-foreground font-normal'}`}
+              className={`w-full p-3 border border-input-border rounded-md text-sm bg-muted font-extrabold focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all cursor-pointer ${newGender ? 'text-foreground' : 'text-muted-foreground font-normal'}`}
               required
               id="gender-class"
             >
@@ -1072,7 +1072,7 @@ export default function EncodeForm({
                       setIsManualOverride((value) => !value);
                       if (manualIdentifier) setBirdCode('');
                     }}
-                    className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-xs font-bold text-emerald-700 hover:underline dark:text-emerald-400"
+                    className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-xs font-bold text-brand-red hover:underline dark:text-primary"
                   >
                     {manualIdentifier ? (
                       <>
@@ -1094,13 +1094,13 @@ export default function EncodeForm({
                   <div
                     className={`flex min-h-14 flex-wrap items-center justify-between gap-2 rounded-md border p-3 ${
                       identifierReady
-                        ? 'border-emerald-300 bg-emerald-50/60 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200'
+                        ? 'border-primary/30 bg-accent-soft text-foreground dark:border-primary/30 dark:bg-accent-soft dark:text-brand-red'
                         : 'border-border border-dashed bg-muted/30 text-muted-foreground'
                     }`}
                   >
                     <div className="flex min-w-0 items-center gap-2">
                       <Lock
-                        className={`h-4 w-4 shrink-0 ${identifierReady ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}
+                        className={`h-4 w-4 shrink-0 ${identifierReady ? 'text-primary dark:text-primary' : 'text-muted-foreground'}`}
                         aria-hidden="true"
                       />
                       <span className="text-xs font-bold tracking-wider uppercase">{t('registry.identifierLabel')}</span>
@@ -1109,7 +1109,7 @@ export default function EncodeForm({
                       </span>
                     </div>
                     {identifierReady ? (
-                      <span className="rounded-full border border-emerald-200 bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-800 dark:border-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">
+                      <span className="rounded-full border border-primary/20 bg-accent-soft px-2 py-0.5 text-xs font-bold text-brand-red dark:border-primary/30 dark:bg-primary/15 dark:text-brand-red">
                         {badge}
                       </span>
                     ) : (
@@ -1122,7 +1122,7 @@ export default function EncodeForm({
                       type="text"
                       value={birdCode}
                       onChange={(e) => setBirdCode(e.target.value)}
-                      className="w-full rounded-md border border-emerald-500 bg-white p-3 font-mono text-sm font-bold text-neutral-900 focus:ring-4 focus:ring-emerald-100 dark:bg-input dark:text-foreground"
+                      className="w-full rounded-md border border-primary bg-white p-3 font-mono text-sm font-bold text-neutral-900 focus:ring-4 focus:ring-primary/15 dark:bg-input dark:text-foreground"
                       placeholder={formatBirdCodeForDisplay(suggestedBirdCode)}
                       id="chicken-code"
                     />
@@ -1136,7 +1136,7 @@ export default function EncodeForm({
                               {t('registry.idAlreadyInUse', { code: birdCode.trim() })}
                             </span>
                           ) : (
-                            <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                            <span className="font-bold text-primary dark:text-primary">
                               {t('registry.validFormatForRole', { role: currentRole })}
                             </span>
                           )}
@@ -1167,7 +1167,7 @@ export default function EncodeForm({
             value={wingBand}
             onChange={(e) => setWingBand(e.target.value)}
             maxLength={50}
-            className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all font-mono font-bold"
+            className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/15 transition-all font-mono font-bold"
             placeholder={t('registry.wingBandPlaceholder')}
             id="wing-band-id"
           />
@@ -1201,7 +1201,7 @@ export default function EncodeForm({
                 type="button"
                 onClick={handleAddBreed}
                 aria-label={t('registry.addBreed')}
-                className="inline-flex min-h-[36px] cursor-pointer items-center gap-1.5 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:text-emerald-300"
+                className="inline-flex min-h-[36px] cursor-pointer items-center gap-1.5 rounded-md border border-primary/30 bg-accent-soft px-2.5 py-1.5 text-xs font-bold text-brand-red transition-colors hover:bg-accent-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 dark:text-brand-red"
               >
                 <Plus className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>{t('registry.addBreed')}</span>
@@ -1210,12 +1210,12 @@ export default function EncodeForm({
           </div>
           <div className="relative" ref={strainInputRef}>
             <div
-              className={`flex min-h-11 w-full flex-wrap items-center gap-1.5 rounded-md border bg-white p-1.5 transition-all focus-within:ring-4 dark:bg-input ${strainError ? 'border-rose-500 focus-within:border-rose-500 focus-within:ring-rose-100 dark:border-rose-700 dark:focus-within:ring-rose-950/50' : 'border-input-border focus-within:border-emerald-500 focus-within:ring-emerald-100'}`}
+              className={`flex min-h-11 w-full flex-wrap items-center gap-1.5 rounded-md border bg-white p-1.5 transition-all focus-within:ring-4 dark:bg-input ${strainError ? 'border-rose-500 focus-within:border-rose-500 focus-within:ring-rose-100 dark:border-rose-700 dark:focus-within:ring-rose-950/50' : 'border-input-border focus-within:border-primary focus-within:ring-primary/15'}`}
             >
               {selectedStrains.map((s, i) => (
                 <span
                   key={s}
-                  className="inline-flex min-h-11 max-w-full items-center gap-1 rounded-md border border-emerald-500/30 bg-emerald-500/10 pl-3 text-xs font-bold text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200"
+                  className="inline-flex min-h-11 max-w-full items-center gap-1 rounded-md border border-primary/25 bg-accent-soft pl-3 text-xs font-bold text-brand-red dark:border-primary/25 dark:bg-accent-soft dark:text-brand-red"
                 >
                   <span className="min-w-0 break-words">{s}</span>
                   <button
@@ -1226,7 +1226,7 @@ export default function EncodeForm({
                       removeSelectedStrain(i);
                     }}
                     aria-label={t('registry.removeStrainAria', { strain: s })}
-                    className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-md text-emerald-700 transition-colors hover:bg-rose-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 dark:text-emerald-300"
+                    className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-md text-brand-red transition-colors hover:bg-rose-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 dark:text-brand-red"
                   >
                     <X className="h-4 w-4" aria-hidden="true" />
                   </button>
@@ -1267,7 +1267,7 @@ export default function EncodeForm({
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => setStrainOpen((o) => !o)}
-                className="ml-auto flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-md border border-slate-200 bg-white text-muted-foreground transition-colors hover:text-success focus:border-emerald-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-border dark:bg-input"
+                className="ml-auto flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-md border border-slate-200 bg-white text-muted-foreground transition-colors hover:text-success focus:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:border-border dark:bg-input"
                 aria-label={t('registry.toggleStrainList')}
                 aria-expanded={strainOpen}
                 aria-controls={strainOpen ? 'genetic-strain-listbox' : undefined}
@@ -1290,14 +1290,14 @@ export default function EncodeForm({
                 }}
               >
                 {typedStrain && !hasExactStrainMatch && !breedsLoading && (
-                  <div className="border-b border-emerald-200 bg-emerald-50/70 p-1.5 dark:border-emerald-900/60 dark:bg-emerald-500/10">
+                  <div className="border-b border-primary/20 bg-accent-soft p-1.5 dark:border-primary/20 dark:bg-accent-soft">
                     {canCreateBreed ? (
                       <button
                         type="button"
                         disabled={creatingBreed}
                         onMouseDown={(event) => event.preventDefault()}
                         onClick={() => void handleAddTypedBreed()}
-                        className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-sm px-3 text-left text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/10 disabled:cursor-wait disabled:opacity-60 dark:text-emerald-300"
+                        className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-sm px-3 text-left text-xs font-bold text-brand-red transition-colors hover:bg-accent-soft disabled:cursor-wait disabled:opacity-60 dark:text-brand-red"
                       >
                         {creatingBreed
                           ? t('registry.breedsLoading')
@@ -1342,11 +1342,11 @@ export default function EncodeForm({
                           onMouseDown={(e) => e.preventDefault()}
                           onMouseEnter={() => setActiveStrainIndex(index)}
                           onClick={() => toggleStrainOption(s)}
-                          className={`flex w-full cursor-pointer items-center justify-between gap-2 px-4 py-2.5 text-left text-sm font-bold transition-colors hover:bg-slate-50 dark:hover:bg-muted/50 ${index === activeStrainIndex ? 'bg-emerald-500/10' : ''} ${selected ? 'text-success dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}
+                          className={`flex w-full cursor-pointer items-center justify-between gap-2 px-4 py-2.5 text-left text-sm font-bold transition-colors hover:bg-slate-50 dark:hover:bg-muted/50 ${index === activeStrainIndex ? 'bg-accent-soft' : ''} ${selected ? 'text-success dark:text-brand-red' : 'text-slate-600 dark:text-muted-foreground'}`}
                         >
                           <span className="min-w-0 break-words">{s}</span>
                           {selected && (
-                            <span className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-success dark:text-emerald-300">
+                            <span className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-success dark:text-brand-red">
                               <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
                               {t('registry.selected')}
                             </span>
@@ -1357,12 +1357,12 @@ export default function EncodeForm({
                   )}
                 </div>
                 {typedStrain && !hasExactStrainMatch && !loading && (
-                  <div className="border-t border-slate-200 bg-emerald-50/60 p-1.5 dark:border-border dark:bg-emerald-500/10">
+                  <div className="border-t border-slate-200 bg-accent-soft p-1.5 dark:border-border dark:bg-accent-soft">
                     <button
                       type="button"
                       onMouseDown={(event) => event.preventDefault()}
                       onClick={() => commitStrain({ focusOnError: true })}
-                      className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-sm px-3 text-left text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/10 dark:text-emerald-300"
+                      className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-sm px-3 text-left text-xs font-bold text-brand-red transition-colors hover:bg-accent-soft dark:text-brand-red"
                     >
                       <Plus className="h-3.5 w-3.5" aria-hidden="true" />
                       {t('registry.addAsNewBreed', { strain: typedStrain })}
@@ -1375,7 +1375,7 @@ export default function EncodeForm({
                       type="button"
                       onMouseDown={(event) => event.preventDefault()}
                       onClick={handleAddBreed}
-                      className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-sm px-3 text-left text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/10 dark:text-emerald-400"
+                      className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-sm px-3 text-left text-xs font-bold text-brand-red transition-colors hover:bg-accent-soft dark:text-primary"
                     >
                       <Plus className="h-3.5 w-3.5" aria-hidden="true" />
                       {t('registry.manageBreeds')}
@@ -1439,7 +1439,7 @@ export default function EncodeForm({
                 }
               }}
               placeholder={t('registry.featherColorPlaceholder')}
-              className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold transition-all"
+              className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-primary font-semibold transition-all"
               id="feather-color"
             />
             <datalist id="feather-color-options">
@@ -1473,7 +1473,7 @@ export default function EncodeForm({
                 }
               }}
               placeholder={t('registry.traitPlaceholder')}
-              className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold transition-all"
+              className="w-full p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-primary font-semibold transition-all"
               id="behavior-trait"
             />
             <datalist id="trait-options">
@@ -1487,14 +1487,14 @@ export default function EncodeForm({
         </div>
       </div>
 
-      <div className="antigravity-hover bg-white dark:bg-card p-6 rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-5">
-        <h3 className="font-black text-sm text-emerald-700 dark:text-emerald-300 uppercase tracking-wider flex items-center space-x-2 border-b pb-2.5 border-slate-100 dark:border-border">
-          <span className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-black shrink-0">2</span>
+      <div className="bg-card border-border rounded-[20px] border p-6 shadow-lg shadow-primary/5 space-y-5">
+        <h3 className="font-black text-sm text-brand-red uppercase tracking-wider flex items-center space-x-2 border-b pb-2.5 border-border">
+          <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-black shrink-0">2</span>
           <span>{t('registry.step2Title')}</span>
         </h3>
         <div>
           <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="birth-date">
-            {t('registry.birthDate')} <span className="text-success dark:text-emerald-300 font-black">{autoCalcAge ? t('registry.requiredAutoAge') : t('registry.requiredOnly')}</span>
+            {t('registry.birthDate')} <span className="text-success dark:text-brand-red font-black">{autoCalcAge ? t('registry.requiredAutoAge') : t('registry.requiredOnly')}</span>
           </label>
           <input
             type="date"
@@ -1504,7 +1504,7 @@ export default function EncodeForm({
             className={`w-full p-3 border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground font-semibold focus:ring-4 transition-all ${
               birthdateValidation.errors.length > 0
                 ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-100 dark:focus:ring-rose-950/50'
-                : 'border-input-border focus:border-emerald-500 focus:ring-emerald-100'
+                : 'border-input-border focus:border-primary focus:ring-primary/15'
             }`}
             required
             id="birth-date"
@@ -1525,7 +1525,7 @@ export default function EncodeForm({
             if (!autoCalcAge) return null;
             const parts = getAgePartsLocal(newBirthdate);
             return parts ? (
-              <p className="mt-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-100 rounded-sm px-2.5 py-1.5">
+              <p className="mt-1.5 text-xs font-bold text-brand-red dark:text-brand-red bg-accent-soft dark:bg-accent-soft border border-primary/20 rounded-sm px-2.5 py-1.5">
                 {t('registry.autoAgeLabel', { label: getAgeLabelLocal(parts), exact: getAgeExactLocal(parts) })}
               </p>
             ) : (
@@ -1535,7 +1535,7 @@ export default function EncodeForm({
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div>
-            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="age-mos">{t('registry.ageMos')} {newBirthdate && autoCalcAge && <span className="text-success dark:text-emerald-300 font-black">{t('registry.autoBadge')}</span>}</label>
+            <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="age-mos">{t('registry.ageMos')} {newBirthdate && autoCalcAge && <span className="text-success dark:text-brand-red font-black">{t('registry.autoBadge')}</span>}</label>
             <input
               type="text"
               inputMode="numeric"
@@ -1556,7 +1556,7 @@ export default function EncodeForm({
             <select
               value={newGrowthStage}
               onChange={(e) => setNewGrowthStage(e.target.value)}
-              className={`w-full p-3 border border-input-border rounded-md text-sm bg-muted font-extrabold focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer text-center ${newGrowthStage ? 'text-success dark:text-emerald-300' : 'text-muted-foreground font-normal'}`}
+              className={`w-full p-3 border border-input-border rounded-md text-sm bg-muted font-extrabold focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all cursor-pointer text-center ${newGrowthStage ? 'text-success dark:text-brand-red' : 'text-muted-foreground font-normal'}`}
             id="growth-stage">
               <option value="" disabled className="bg-popover text-muted-foreground">{t('registry.selectStage')}</option>
               <option value="Chick" className="bg-popover text-popover-foreground">{t('registry.stageChick')}</option>
@@ -1569,11 +1569,11 @@ export default function EncodeForm({
           </div>
           <div>
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="height">{t('registry.height')} ({heightUnitLabel(unitPrefs.heightUnit)})</label>
-            <input type="number" step="0.1" min="0" inputMode="decimal" onWheel={(e) => e.currentTarget.blur()} value={height} onChange={(e) => { const v = e.target.value; setHeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-input-border rounded-md text-sm text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 45.0" id="height" />
+            <input type="number" step="0.1" min="0" inputMode="decimal" onWheel={(e) => e.currentTarget.blur()} value={height} onChange={(e) => { const v = e.target.value; setHeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-input-border rounded-md text-sm text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-primary" placeholder="e.g. 45.0" id="height" />
           </div>
           <div>
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-1.5 tracking-wider" htmlFor="weight">{t('registry.weight')} ({weightUnitLabel(unitPrefs.weightUnit)})</label>
-            <input type="number" step="0.1" min="0" inputMode="decimal" onWheel={(e) => e.currentTarget.blur()} value={weight} onChange={(e) => { const v = e.target.value; setWeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-input-border rounded-md text-sm text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500" placeholder="e.g. 2.0" id="weight" />
+            <input type="number" step="0.1" min="0" inputMode="decimal" onWheel={(e) => e.currentTarget.blur()} value={weight} onChange={(e) => { const v = e.target.value; setWeight(v === '' ? '' : String(Math.round(Number(v) * 10) / 10)); }} className="no-spinner w-full p-3 border border-input-border rounded-md text-sm text-center font-extrabold bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-primary" placeholder="e.g. 2.0" id="weight" />
           </div>
         </div>
         <div className="relative" ref={legColorInputRef}>
@@ -1588,13 +1588,13 @@ export default function EncodeForm({
               expanded={legColorOpen}
               controls={legColorOpen ? 'leg-color-listbox' : undefined}
               placeholder={t('registry.legColorPlaceholder')}
-              className={`w-full pl-3 pr-9 p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-emerald-500 font-semibold transition-all ${legColorQuery ? 'text-neutral-900 dark:text-foreground' : 'text-muted-foreground dark:text-muted-foreground dark:placeholder:text-muted-foreground font-normal'}`}
+              className={`w-full pl-3 pr-9 p-3 border border-input-border rounded-md text-sm bg-white dark:bg-input text-neutral-900 dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground focus:border-primary font-semibold transition-all ${legColorQuery ? 'text-neutral-900 dark:text-foreground' : 'text-muted-foreground dark:text-muted-foreground dark:placeholder:text-muted-foreground font-normal'}`}
               id="leg-color"
             />
             <button
               type="button"
               onClick={() => setLegColorOpen((o) => !o)}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-sm border border-slate-200 dark:border-border bg-white dark:bg-input text-muted-foreground text-xs focus:border-emerald-500 cursor-pointer hover:text-success transition-colors"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-sm border border-slate-200 dark:border-border bg-white dark:bg-input text-muted-foreground text-xs focus:border-primary cursor-pointer hover:text-success transition-colors"
               aria-label={t('registry.toggleLegColorList')}
             >
               ▾
@@ -1620,9 +1620,9 @@ export default function EncodeForm({
                           <button
                           type="button"
                           onMouseDown={(e) => { e.preventDefault(); setLegColorQuery(legColorQuery.trim()); setNewLegColor(legColorQuery.trim()); setLegColorOpen(false); }}
-                          className="w-full text-left px-4 py-3 bg-emerald-500/10 border-b border-slate-200 dark:border-border flex items-center justify-between gap-2 cursor-pointer hover:bg-emerald-500/20 transition-colors"
+                          className="w-full text-left px-4 py-3 bg-accent-soft border-b border-slate-200 dark:border-border flex items-center justify-between gap-2 cursor-pointer hover:bg-accent-soft transition-colors"
                         >
-                          <span className="text-sm font-black text-success dark:text-emerald-300">{t('registry.saveNewLegColor', { color: legColorQuery.trim() })}</span>
+                          <span className="text-sm font-black text-success dark:text-brand-red">{t('registry.saveNewLegColor', { color: legColorQuery.trim() })}</span>
                           <span className="text-xs font-mono text-success uppercase shrink-0">{t('registry.autoSavedBadge')}</span>
                         </button>
                         {matching.length > 0 && <div className="px-4 pt-2.5 pb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('registry.matchingColors')}</div>}
@@ -1641,7 +1641,7 @@ export default function EncodeForm({
                   }
                   return matching.map((s) => (
                       <div key={s} className="flex items-center w-full group">
-                        <button type="button" onMouseDown={(e) => { e.preventDefault(); setLegColorQuery(s); setNewLegColor(s); setLegColorOpen(false); }} className={`flex-1 text-left px-4 py-2.5 text-sm font-bold hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors cursor-pointer ${s.toLowerCase() === legColorQuery.trim().toLowerCase() ? 'bg-emerald-500/10 text-success dark:text-emerald-300' : 'text-slate-600 dark:text-muted-foreground'}`}>
+                        <button type="button" onMouseDown={(e) => { e.preventDefault(); setLegColorQuery(s); setNewLegColor(s); setLegColorOpen(false); }} className={`flex-1 text-left px-4 py-2.5 text-sm font-bold hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors cursor-pointer ${s.toLowerCase() === legColorQuery.trim().toLowerCase() ? 'bg-accent-soft text-success dark:text-brand-red' : 'text-slate-600 dark:text-muted-foreground'}`}>
                           {s}
                         </button>
                         {customLegColorNames.has(s) && (
@@ -1661,9 +1661,9 @@ export default function EncodeForm({
         </div>
       </div>
 
-      <div className="antigravity-hover bg-white dark:bg-card p-6 rounded-lg border border-slate-200/80 dark:border-border shadow-sm space-y-4">
-        <h3 className="font-black text-sm text-emerald-700 dark:text-emerald-300 uppercase tracking-wider flex items-center space-x-2 border-b pb-2.5 border-slate-100 dark:border-border">
-          <span className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-black shrink-0">3</span>
+      <div className="bg-card border-border rounded-[20px] border p-6 shadow-lg shadow-primary/5 space-y-4">
+        <h3 className="font-black text-sm text-brand-red uppercase tracking-wider flex items-center space-x-2 border-b pb-2.5 border-border">
+          <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-black shrink-0">3</span>
           <span>{t('registry.step3Title')}</span>
         </h3>
         {hasLineageParents && (() => {
@@ -1687,7 +1687,7 @@ export default function EncodeForm({
                       })}
                     </p>
                     {sireFullSibs.length > 0 && (
-                      <p className="text-xs font-bold text-success dark:text-emerald-300 mt-1">{t('registry.fullSiblingsNotice', { count: String(sireFullSibs.length) })}</p>
+                      <p className="text-xs font-bold text-success dark:text-brand-red mt-1">{t('registry.fullSiblingsNotice', { count: String(sireFullSibs.length) })}</p>
                     )}
                   </div>
                 )}
@@ -1719,7 +1719,7 @@ export default function EncodeForm({
             />
           </div>
         )}
-        <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/40 dark:to-emerald-950/40 border border-teal-100 dark:border-teal-900/50 rounded-lg p-4 space-y-3">
+        <div className="bg-gradient-to-r from-accent-soft to-background dark:from-accent-soft dark:to-background border border-primary/15 rounded-lg p-4 space-y-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             <div className="min-w-0">
               <p className="text-xs font-black text-teal uppercase tracking-widest">{t('registry.lineageGeneration')}</p>
@@ -1807,12 +1807,13 @@ export default function EncodeForm({
         registerBusy={registerBusy}
         registerLabel={registerLabel}
         registerHelper={registerHelper}
+        stickyActions
         footer={
           onCancel ? (
             <button
               type="button"
               onClick={onCancel}
-              className="min-h-[44px] w-full cursor-pointer rounded-lg border border-border bg-muted px-4 py-3 text-xs font-black tracking-widest uppercase text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+              className="bg-accent-soft text-brand-red border-primary/30 hover:bg-primary/10 hover:text-brand-red focus-visible:ring-primary focus-visible:ring-offset-background flex min-h-[58px] w-full cursor-pointer items-center justify-center rounded-full border px-4 py-3 text-xs font-black tracking-widest uppercase transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
               {t('registry.cancelRegistration')}
             </button>

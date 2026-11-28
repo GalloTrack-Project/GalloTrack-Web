@@ -118,7 +118,7 @@ describe('LineageFlow pedigree canvas', () => {
     render(<Harness />);
 
     expect(screen.getByRole('region', { name: 'Pedigree canvas' })).toBeInTheDocument();
-    expect(screen.getByText('Generation 1 · Root')).toBeInTheDocument();
+    expect(screen.getByText('Generation 1 - Parents')).toBeInTheDocument();
     expect(screen.getByText('Generation 2')).toBeInTheDocument();
     expect(screen.getByText('Generation 3')).toBeInTheDocument();
 
@@ -203,13 +203,13 @@ describe('LineageFlow pedigree canvas', () => {
     expect(cardFor('Offspring 1A1')).toBeInTheDocument();
     expect(cardFor('Dam C')).toBeInTheDocument();
     expect(cardFor('Sire 1')).toBeInTheDocument();
-    expect(screen.getByText('Generation 3 · Root')).toBeInTheDocument();
+    expect(screen.getByText('Generation 3')).toBeInTheDocument();
   });
 
   it('finds a bird and re-roots the canvas, with a no-match state', () => {
     render(<Harness />);
 
-    const finder = screen.getByLabelText('Find a bird');
+    const finder = screen.getByLabelText('Search by name, ID or wing band');
     fireEvent.change(finder, { target: { value: 'Grandchild' } });
     fireEvent.keyDown(finder, { key: 'Enter' });
 
@@ -218,19 +218,40 @@ describe('LineageFlow pedigree canvas', () => {
     expect(screen.getByTestId('lineage-details')).toHaveTextContent('Grandchild');
 
     fireEvent.change(finder, { target: { value: 'zzz' } });
-    expect(screen.getByText('No birds match.')).toBeInTheDocument();
+    expect(screen.getByText('No chickens match.')).toBeInTheDocument();
   });
 
   it('re-roots from search and still shows only three generations from the new root', () => {
     render(<Harness fowls={deepFamily} />);
 
-    const finder = screen.getByLabelText('Find a bird');
+    const finder = screen.getByLabelText('Search by name, ID or wing band');
     fireEvent.change(finder, { target: { value: 'Offspring 1A1' } });
     fireEvent.keyDown(finder, { key: 'Enter' });
 
     expect(cardFor('Offspring 1A1')).toHaveTextContent('Root');
     expect(cardFor('Grandchild')).toBeInTheDocument();
     expect(cardFor('Great Grandchild')).toBeInTheDocument();
+  });
+
+  it('matches wing bands for cocks only', () => {
+    const banded = family.map((fowl) =>
+      fowl.name === 'Sire 1'
+        ? { ...fowl, wing_band: 'WB-COCK' }
+        : fowl.name === 'Dam A'
+          ? { ...fowl, wing_band: 'WB-HEN' }
+          : fowl,
+    );
+    render(<Harness fowls={banded} />);
+    expect(cardFor('Sire 1')).toHaveTextContent(/WB-COCK/);
+    expect(cardFor('Dam A')).not.toHaveTextContent(/WB-HEN/);
+    const finder = screen.getByLabelText('Search by name, ID or wing band');
+
+    fireEvent.change(finder, { target: { value: 'WB-HEN' } });
+    expect(screen.getByText('No chickens match.')).toBeInTheDocument();
+
+    fireEvent.change(finder, { target: { value: 'WB-COCK' } });
+    const listbox = screen.getByRole('listbox', { name: 'Search by name, ID or wing band' });
+    expect(within(listbox).getByRole('option', { name: /Sire 1/i })).toBeInTheDocument();
   });
 
   it('surfaces global search matches and can focus the first one', () => {

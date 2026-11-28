@@ -1,18 +1,20 @@
 'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { useAuth } from '@/lib/contexts/auth-context';
+import { useT } from '@/lib/i18n';
 
 export default function CtaSection() {
   const auth = useAuth();
+  const t = useT();
   const isLoggedIn = !!auth.currentUserId;
 
   return (
-    <section className="relative overflow-hidden py-12 sm:py-16 bg-gradient-to-br from-emerald-700 via-emerald-800 to-teal-900 text-white">
-      {/* Background patterned overlay matching brand left panel */}
-      <div className="absolute inset-0 opacity-[0.07] pointer-events-none">
-        <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+    <section className="from-hero-start via-hero-mid to-sidebar-end relative overflow-hidden bg-gradient-to-br py-12 text-sidebar-foreground sm:py-16">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.08]">
+        <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <pattern id="cta-grid" width="40" height="40" patternUnits="userSpaceOnUse">
               <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="0.5" />
@@ -22,39 +24,39 @@ export default function CtaSection() {
         </svg>
       </div>
 
-      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-        <div className="space-y-3 max-w-2xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight leading-tight">
-            Start Managing Your Breeding Records with GalloTrack
+      <div className="relative z-10 mx-auto max-w-5xl space-y-6 px-4 text-center sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl space-y-3">
+          <h2 className="text-2xl leading-tight font-black tracking-tight break-words sm:text-3xl md:text-4xl">
+            {t('landing.ctaTitle')}
           </h2>
-          <p className="text-xs sm:text-sm text-emerald-100/80 font-medium leading-relaxed">
-            Record pedigree ancestry, calculate bloodline genetics, and track fight encounters in one place.
+          <p className="text-sidebar-muted text-xs leading-relaxed font-medium break-words sm:text-sm">
+            {t('landing.ctaDescription')}
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+        <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
           {isLoggedIn ? (
             <Link
               href="/dashboard"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3 rounded-lg bg-white text-emerald-900 hover:bg-emerald-50 active:scale-[0.99] font-black text-sm shadow-xl transition-all cursor-pointer"
+              className="bg-card text-brand-red focus-visible:ring-sidebar-foreground inline-flex min-h-12 items-center justify-center gap-2 rounded-lg px-7 text-sm font-black shadow-xl transition-colors hover:bg-accent-soft focus-visible:ring-2 focus-visible:outline-none"
             >
-              <span>Open Dashboard</span>
-              <ArrowRight className="w-4 h-4" />
+              <span>{t('landing.openDashboard')}</span>
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           ) : (
             <>
               <Link
                 href="/register"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3 rounded-lg bg-white text-emerald-900 hover:bg-emerald-50 active:scale-[0.99] font-black text-sm shadow-xl transition-all cursor-pointer"
+                className="bg-card text-brand-red focus-visible:ring-sidebar-foreground inline-flex min-h-12 items-center justify-center gap-2 rounded-lg px-7 text-sm font-black shadow-xl transition-colors hover:bg-accent-soft focus-visible:ring-2 focus-visible:outline-none"
               >
-                <span>Create an Account</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>{t('landing.ctaCreate')}</span>
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
               <Link
                 href="/login"
-                className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 rounded-lg border border-white/30 bg-white/10 hover:bg-white/20 text-white font-bold text-sm transition-colors cursor-pointer"
+                className="border-sidebar-foreground/30 bg-sidebar-foreground/10 text-sidebar-foreground hover:bg-sidebar-foreground/20 focus-visible:ring-sidebar-foreground inline-flex min-h-12 items-center justify-center rounded-lg border px-6 text-sm font-bold transition-colors focus-visible:ring-2 focus-visible:outline-none"
               >
-                Log in
+                {t('landing.login')}
               </Link>
             </>
           )}

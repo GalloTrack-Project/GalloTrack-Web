@@ -89,6 +89,19 @@ const family: FowlRecord[] = [
   }),
 ];
 
+function renderTree(onPick = vi.fn()) {
+  return render(
+    <UIProvider theme="light" setTheme={() => {}}>
+      <LineageDirectory
+        fowls={family}
+        matchHistory={[] as MatchRecord[]}
+        pairingAnalytics={{ all: new Map<string, PairingStats>(), ranked: [] }}
+        setSelectedFowlForDetails={onPick}
+      />
+    </UIProvider>,
+  );
+}
+
 function renderFamilies(onPick = vi.fn()) {
   const result = render(
     <UIProvider theme="light" setTheme={() => {}}>
@@ -130,6 +143,16 @@ describe('Full Siblings & Families photos', () => {
     delete (window as Window & { IntersectionObserver?: typeof IntersectionObserver })
       .IntersectionObserver;
     vi.restoreAllMocks();
+  });
+
+  it('shows initials without a photo and Photo unavailable when a stored photo fails', async () => {
+    resolvePhoto.mockResolvedValue(null);
+    renderTree();
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Photo unavailable').length).toBeGreaterThan(0);
+    });
+    expect(screen.getByText('CT')).toBeInTheDocument();
   });
 
   it('renders thumbnails for cocks, hens and the header Sire/Dam chips', async () => {

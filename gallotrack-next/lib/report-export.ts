@@ -227,8 +227,11 @@ export function buildReportHtml(doc: ReportDocument): string {
 <title>${escapeHtml(doc.title)}</title>
 <style>
   * { box-sizing: border-box; }
+  html { background: #ffffff; color-scheme: light; }
   html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   body {
+    background: #ffffff;
+    color-scheme: light;
     font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
     color: #0f172a;
     margin: 24px auto;

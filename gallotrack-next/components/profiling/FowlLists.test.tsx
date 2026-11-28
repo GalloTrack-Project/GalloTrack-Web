@@ -49,6 +49,19 @@ describe('FowlLists search and filter', () => {
     expect(searchInput).toHaveAttribute('placeholder', 'Search name, ID, wing band…');
   });
 
+  it('toggles and persists list/grid view', () => {
+    localStorage.clear();
+    renderFowlLists();
+
+    const gridButton = screen.getByRole('button', { name: /Grid view/i });
+    fireEvent.click(gridButton);
+    expect(localStorage.getItem('gt-registry-view')).toBe('grid');
+    expect(gridButton).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.click(screen.getByRole('button', { name: /List view/i }));
+    expect(localStorage.getItem('gt-registry-view')).toBe('list');
+  });
+
   it('filters by chicken name with debounce and updates live count', async () => {
     renderFowlLists();
     const searchInput = screen.getByLabelText(/Search Registry/i);
@@ -232,13 +245,13 @@ describe('FowlLists search and filter', () => {
 
     // Iron Lemon fought -> has Retired Fighter badge
     const ironLemonHeading = screen.getByRole('heading', { level: 4, name: /Iron Lemon/i });
-    const ironLemonCard = ironLemonHeading.closest('.antigravity-card');
+    const ironLemonCard = ironLemonHeading.closest('.landing-step-in');
     expect(ironLemonCard).not.toBeNull();
     expect(ironLemonCard).toHaveTextContent(/Retired Fighter/i);
 
     // Titan Sweater did not fight -> does not have badge
     const titanHeading = screen.getByRole('heading', { level: 4, name: /Titan Sweater/i });
-    const titanCard = titanHeading.closest('.antigravity-card');
+    const titanCard = titanHeading.closest('.landing-step-in');
     expect(titanCard).not.toBeNull();
     expect(titanCard).not.toHaveTextContent(/Retired Fighter/i);
   });
@@ -298,8 +311,8 @@ describe('FowlLists chicken photos', () => {
     });
     const image = screen.getByRole('img', { name: 'Photo Bird (1)' });
     expect(image).toHaveAttribute('loading', 'lazy');
-    expect(image).toHaveAttribute('width', '96');
-    expect(image).toHaveAttribute('height', '96');
+    expect(image).toHaveAttribute('width', '120');
+    expect(image).toHaveAttribute('height', '120');
   });
 
   it('keeps the existing placeholder when the chicken has no photo', () => {
