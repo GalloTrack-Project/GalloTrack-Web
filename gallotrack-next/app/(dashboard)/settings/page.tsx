@@ -200,6 +200,13 @@ export default function SettingsPage() {
   const router = useRouter();
   const { t, language, isBeta } = useLanguage();
   const [activeTab, setActiveTab] = useState<Tab>('account');
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const tab = new URLSearchParams(window.location.search).get('tab');
+      if (tab && TABS.some((item) => item.id === tab)) setActiveTab(tab as Tab);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
   const [settings, setSettings] = useState<UserSettings>({
     default_strain: 'Sweater',
     cloud_logs: true,
@@ -963,7 +970,7 @@ export default function SettingsPage() {
               </Field>
               {isBeta(language) && (
                 <p className="py-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
-                   {t('preferences.betaNotice')}
+                  {t('preferences.betaNotice')}
                 </p>
               )}
             </SectionCard>

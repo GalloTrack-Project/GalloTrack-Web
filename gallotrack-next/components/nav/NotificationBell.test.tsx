@@ -69,6 +69,9 @@ const notification: NotificationView = {
 const markRead = vi.fn();
 const markAllRead = vi.fn();
 const dismiss = vi.fn();
+const clearRead = vi.fn();
+const clearAll = vi.fn();
+const refresh = vi.fn();
 
 function mockContext(unreadCount = 100) {
   vi.mocked(useNotifications).mockReturnValue({
@@ -83,10 +86,12 @@ function mockContext(unreadCount = 100) {
       leadDays: [7, 0],
       audience: 'both',
     },
-    refresh: vi.fn(),
+    refresh,
     markRead,
     markAllRead,
     dismiss,
+    clearRead,
+    clearAll,
     updatePreferences: vi.fn(),
     resetPreferences: vi.fn(),
   });
@@ -98,6 +103,8 @@ describe('NotificationBell', () => {
     markRead.mockResolvedValue(undefined);
     markAllRead.mockResolvedValue(undefined);
     dismiss.mockResolvedValue(undefined);
+    clearRead.mockResolvedValue(undefined);
+    clearAll.mockResolvedValue(undefined);
     mockContext();
   });
 
@@ -117,9 +124,14 @@ describe('NotificationBell', () => {
     expect(bell).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getAllByText('Pearl Lemon (1A4) is now a Stag.')[0]).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Mark as read' }));
+    const rowMenu = screen.getByRole('button', {
+      name: 'More notification actions: Pearl Lemon',
+    });
+    fireEvent.click(rowMenu);
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Mark as read' }));
     expect(markRead).toHaveBeenCalledWith(notification.key);
-    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
+    fireEvent.click(rowMenu);
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Dismiss' }));
     expect(dismiss).toHaveBeenCalledWith(notification.key);
 
     fireEvent.keyDown(document, { key: 'Escape' });
@@ -129,10 +141,12 @@ describe('NotificationBell', () => {
     expect(bell).toHaveFocus();
   });
 
-  it('links View all to /notifications and marks all read', async () => {
+  it('opens the actions sheet with View all and mark-all', async () => {
     render(<NotificationBell />);
     fireEvent.click(screen.getByRole('button', { name: 'Notifications, 100 unread' }));
-    expect(await screen.findByRole('link', { name: /View all notifications/ })).toHaveAttribute(
+    fireEvent.click(screen.getByRole('button', { name: 'More notification actions' }));
+    expect(await screen.findByRole('dialog', { name: 'Notification actions' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /View all notifications/ })).toHaveAttribute(
       'href',
       '/notifications',
     );

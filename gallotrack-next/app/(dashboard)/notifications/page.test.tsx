@@ -97,6 +97,8 @@ function mockContext() {
     markRead,
     markAllRead,
     dismiss,
+    clearRead: vi.fn(),
+    clearAll: vi.fn(),
     updatePreferences: vi.fn(),
     resetPreferences: vi.fn(),
   });

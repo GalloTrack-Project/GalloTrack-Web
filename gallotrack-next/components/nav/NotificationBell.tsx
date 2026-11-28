@@ -7,14 +7,8 @@ import { useFowl } from '@/lib/contexts/fowl-context';
 import { useNotifications } from '@/lib/contexts/notification-context';
 import { useUI } from '@/lib/contexts/ui-context';
 import { useT } from '@/lib/i18n';
-import {
-  notificationsAriaLabel,
-  unreadBadgeText,
-} from '@/lib/notifications/format';
-import type {
-  NotificationMember,
-  NotificationView,
-} from '@/lib/notifications/types';
+import { notificationsAriaLabel, unreadBadgeText } from '@/lib/notifications/format';
+import type { NotificationMember, NotificationView } from '@/lib/notifications/types';
 import NotificationPanel from './NotificationPanel';
 
 export default function NotificationBell() {
@@ -27,6 +21,9 @@ export default function NotificationBell() {
     markRead,
     markAllRead,
     dismiss,
+    clearRead,
+    clearAll,
+    refresh,
   } = useNotifications();
   const fowl = useFowl();
   const ui = useUI();
@@ -46,7 +43,9 @@ export default function NotificationBell() {
   useEffect(() => {
     if (!open) return;
     const onPointerDown = (event: PointerEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) close();
+      const target = event.target;
+      if (target instanceof Element && target.closest('[data-notification-actions]')) return;
+      if (wrapperRef.current && !wrapperRef.current.contains(target as Node)) close();
     };
     document.addEventListener('pointerdown', onPointerDown);
     return () => document.removeEventListener('pointerdown', onPointerDown);
@@ -127,6 +126,9 @@ export default function NotificationBell() {
           onMarkRead={(key) => void markRead(key)}
           onDismiss={(key) => void dismiss(key)}
           onMarkAllRead={() => void markAllRead()}
+          onClearRead={() => void clearRead()}
+          onClearAll={() => void clearAll()}
+          onRefresh={refresh}
         />
       )}
     </div>

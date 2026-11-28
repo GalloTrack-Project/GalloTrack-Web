@@ -94,28 +94,54 @@ function renderPanel(overrides: Partial<React.ComponentProps<typeof Notification
       onMarkRead={vi.fn()}
       onDismiss={vi.fn()}
       onMarkAllRead={vi.fn()}
+      onClearRead={vi.fn()}
+      onClearAll={vi.fn()}
+      onRefresh={vi.fn()}
       {...overrides}
     />,
   );
 }
 
 describe('NotificationPanel', () => {
-  it('uses a bottom sheet on mobile and exposes a focus trap', () => {
+  it('uses a full-screen sheet on mobile and exposes a focus trap', () => {
     const onClose = vi.fn();
     renderPanel({ onClose });
     const panel = screen.getByRole('dialog', { name: 'Notifications' });
-    expect(panel.className).toContain('bottom-0');
-    expect(panel.className).toContain('rounded-t-2xl');
+    expect(panel.className).toContain('inset-0');
+    expect(panel.className).toContain('h-[100dvh]');
+    expect(panel.className).toContain('rounded-none');
     expect(panel).toHaveAttribute('aria-modal', 'true');
     const close = screen.getByRole('button', { name: 'Close notifications' });
     expect(close).toHaveFocus();
 
     fireEvent.keyDown(document, { key: 'Tab', shiftKey: true });
-    expect(screen.getByRole('link', { name: /View all notifications/ })).toHaveFocus();
+    expect(panel.contains(document.activeElement)).toBe(true);
     fireEvent.keyDown(document, { key: 'Tab' });
     expect(close).toHaveFocus();
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('filters the feed with All and Unread tabs', () => {
+    const unread = notification({
+      key: 'unread-item',
+      fowlName: 'Unread Chicken',
+      read_at: null,
+    });
+    const read = notification({
+      key: 'read-item',
+      fowlName: 'Read Chicken',
+      read_at: new Date().toISOString(),
+    });
+    renderPanel({ notifications: [unread, read], unreadCount: 1 });
+
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
+    fireEvent.click(screen.getByRole('tab', { name: /Unread/ }));
+    expect(screen.getAllByRole('listitem')).toHaveLength(1);
+    expect(screen.getByText('Unread Chicken')).toBeInTheDocument();
+    fireEvent.keyDown(screen.getByRole('tab', { name: /Unread/ }), { key: 'ArrowLeft' });
+    expect(screen.getByRole('tab', { name: /All/ })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
   });
 
   it('shows only the latest 10 items and groups them into Today, This week and Earlier', () => {
@@ -146,10 +172,16 @@ describe('NotificationPanel', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: /Show 5 chickens/ }));
     expect(screen.getByText('Pearl Lemon 1')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Mark as read' }));
+    const rowMenu = screen.getByRole('button', {
+      name: 'More notification actions: 5 chickens',
+    });
+    fireEvent.click(rowMenu);
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Mark as read' }));
     expect(onMarkRead).toHaveBeenCalledWith('group::stag::week::reached');
-    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
+    fireEvent.click(rowMenu);
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Dismiss' }));
     expect(onDismiss).toHaveBeenCalledWith('group::stag::week::reached');
+    fireEvent.click(screen.getByRole('button', { name: 'More notification actions' }));
     fireEvent.click(screen.getByRole('button', { name: 'Mark all as read' }));
     expect(onMarkAllRead).toHaveBeenCalled();
   });
@@ -171,6 +203,9 @@ describe('NotificationPanel', () => {
         onMarkRead={vi.fn()}
         onDismiss={vi.fn()}
         onMarkAllRead={vi.fn()}
+        onClearRead={vi.fn()}
+        onClearAll={vi.fn()}
+        onRefresh={vi.fn()}
       />,
     );
     expect(screen.getByText('Could not load notifications')).toBeInTheDocument();
