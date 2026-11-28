@@ -16,6 +16,7 @@
     "test:watch": "vitest",
     "test:layout": "tsx scripts/dashboard-kpi-layout-check.ts && tsx scripts/hub-identity-layout-check.ts",
     "test:hub-layout": "tsx scripts/hub-identity-layout-check.ts",
+    "test:profile-layout": "tsx scripts/profile-badge-layout-check.ts",
     "seed:demo": "tsx scripts/seed-demo.ts",
     "check:exclusivity": "tsx scripts/check-tab-exclusivity.ts",
     "check:emoji": "tsx scripts/check-emoji.ts",

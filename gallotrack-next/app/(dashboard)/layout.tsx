@@ -25,7 +25,10 @@ import UserMenu from '@/components/nav/UserMenu';
 import DashboardHeaderActions from '@/components/dashboard/DashboardHeaderActions';
 import SystemConfigSidebarItem from '@/components/nav/SystemConfigSidebarItem';
 import { SystemConfigNavProvider } from '@/lib/contexts/system-config-nav';
-import { NotificationProvider, useNotificationUnreadCount } from '@/lib/contexts/notification-context';
+import {
+  NotificationProvider,
+  useNotificationUnreadCount,
+} from '@/lib/contexts/notification-context';
 import { ModalsWrapper } from './wrappers';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import FooterBand from '@/components/layout/FooterBand';
@@ -33,11 +36,7 @@ import { useT } from '@/lib/i18n';
 import { BRAND_TAGLINE_KEY } from '@/lib/brand-tagline';
 import { CompactLanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { unreadBadgeText } from '@/lib/notifications/format';
-import {
-  ACTIVE_THEME_PRESET,
-  getThemeTokens,
-  themeCssVariables,
-} from '@/lib/theme/heritage';
+import { ACTIVE_THEME_PRESET, getThemeTokens, themeCssVariables } from '@/lib/theme/heritage';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -274,7 +273,9 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
       }
       if (event.key !== 'Tab' || !panel) return;
       const items = Array.from(
-        panel.querySelectorAll<HTMLElement>('a[href],button:not([disabled]),[tabindex]:not([tabindex="-1"])'),
+        panel.querySelectorAll<HTMLElement>(
+          'a[href],button:not([disabled]),[tabindex]:not([tabindex="-1"])',
+        ),
       );
       if (items.length === 0) return;
       const first = items[0];
@@ -355,12 +356,14 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
               </button>
               <span aria-hidden="true" className="bg-brand-orange h-10 w-1 shrink-0 rounded-full" />
               <div className="min-w-0">
-                <div className="border-primary/15 bg-accent-soft text-brand-red mb-1 inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-black tracking-widest uppercase">
-                  <span>{isAdmin ? t('header.adminPortal') : t('header.portal')}</span>
-                  <span aria-hidden="true" className="text-muted-foreground">
+                <div className="border-primary/15 bg-accent-soft text-brand-red mb-1 inline-flex max-w-full min-w-0 items-center gap-1.5 overflow-hidden rounded-full border px-2.5 py-0.5 text-[10px] font-black tracking-widest uppercase">
+                  <span className="shrink-0">
+                    {isAdmin ? t('header.adminPortal') : t('header.portal')}
+                  </span>
+                  <span aria-hidden="true" className="text-muted-foreground shrink-0">
                     /
                   </span>
-                  <span className="text-foreground normal-case tracking-wide">
+                  <span className="text-foreground min-w-0 truncate tracking-wide normal-case">
                     {isDashboard ? t('heritage.dashboardTitle') : activeTitle}
                   </span>
                 </div>
@@ -407,7 +410,10 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
             role="alert"
             className="border-warning/40 bg-low-sample-bg flex shrink-0 flex-col gap-2 border-b px-4 py-3 sm:flex-row sm:items-center sm:px-6 md:px-8"
           >
-            <AlertTriangle className="text-low-sample hidden h-4 w-4 shrink-0 sm:block" aria-hidden="true" />
+            <AlertTriangle
+              className="text-low-sample hidden h-4 w-4 shrink-0 sm:block"
+              aria-hidden="true"
+            />
             <div className="min-w-0 flex-1">
               <p className="text-low-sample text-xs font-black tracking-widest uppercase">
                 {t('errors.syncFailed')}

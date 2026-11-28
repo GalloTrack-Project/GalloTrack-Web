@@ -8,6 +8,7 @@ import {
   processChickenPhoto,
   resolveChickenPhotoUrl,
   resolveChickenPhotoUrls,
+  resolveFreshChickenPhotoUrl,
   validateChickenPhotoFile,
 } from '@/lib/chicken-photo';
 
@@ -122,6 +123,33 @@ describe('chicken photo helpers', () => {
 
     await resolveChickenPhotoUrls(['user-1/42/a.webp', 'user-1/42/b.webp']);
     expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    fetchMock.mockRestore();
+  });
+
+  it('requests a fresh signed URL at print time without using the cached URL', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          signedUrls: {
+            'user-1/42/print.webp': 'https://signed.test/print.webp',
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+
+    await expect(
+      resolveFreshChickenPhotoUrl('user-1/42/print.webp'),
+    ).resolves.toBe('https://signed.test/print.webp');
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [requestUrl, requestInit] = fetchMock.mock.calls[0];
+    expect(requestUrl).toBe('/api/fowl/photo/sign');
+    expect(requestInit?.cache).toBe('no-store');
+    expect(JSON.parse(String(requestInit?.body)).paths).toEqual([
+      'user-1/42/print.webp',
+    ]);
 
     fetchMock.mockRestore();
   });

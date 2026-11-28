@@ -144,10 +144,10 @@ function FowlCard({
         className="border-border shrink-0 rounded-xl border shadow-inner"
         fallback={<span className="text-xs font-mono">{t('registry.cardNoPhoto')}</span>}
       />
-      <div className="flex-1 w-full space-y-3">
-        <div className="flex items-center flex-wrap gap-2">
+      <div className="min-w-0 max-w-full flex-1 w-full space-y-3">
+        <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
           <h4 className="text-base font-black text-foreground flex items-center gap-2">
-            <span className="font-mono text-xs font-black px-2 py-0.5 rounded border uppercase text-success bg-success/10 border-success/25 tracking-tight">
+            <span className="font-mono text-xs font-black px-2 py-0.5 rounded border uppercase text-success bg-success/10 border-success/25 shadow-2xs tracking-tight">
               [<HighlightText text={formatBirdCodeForDisplay(birdCodeOf(fowl, allFowls)) || '—'} query={highlightQuery} />]
             </span>
             <HighlightText text={fowl.name} query={highlightQuery} />
@@ -155,7 +155,7 @@ function FowlCard({
           {fowl.wing_band && fowl.wing_band.trim().toLowerCase() !== normalizeBirdCode(fowl.bird_code).toLowerCase() ? (
             <span className="text-xs font-mono font-black border px-2.5 py-0.5 rounded-full uppercase text-warning bg-warning/10 border-warning/25" title={t('registry.wingBandTooltip')}> <HighlightText text={fowl.wing_band} query={highlightQuery} /></span>
           ) : null}
-          <span className="text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-success bg-success/10 border-success/20">{displayBreed}</span>
+          <span className="antigravity-badge max-w-full whitespace-normal break-words text-xs font-black border px-2.5 py-0.5 rounded-full uppercase text-success bg-success/10 border-success/25 [overflow-wrap:anywhere]">{displayBreed}</span>
           <BreedingTypeBadge classification={classification} />
           {(parentage.type === 'close' || parentage.type === 'line') && (
             <RelatednessBadge classification={parentage} compact />

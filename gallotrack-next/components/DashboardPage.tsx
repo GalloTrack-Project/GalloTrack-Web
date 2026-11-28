@@ -149,8 +149,7 @@ export default function DashboardPage() {
     router.push(`/${page}`);
   };
   const drawsCount = React.useMemo(
-    () =>
-      matchHistory.filter((match) => (match.outcome || '').toLowerCase() === 'draw').length,
+    () => matchHistory.filter((match) => (match.outcome || '').toLowerCase() === 'draw').length,
     [matchHistory],
   );
   const decidedCount = winsCount + lossesCount;
@@ -394,9 +393,9 @@ export default function DashboardPage() {
   const heroImage = getPrimaryHeroImage();
 
   return (
-    <div className="min-w-0 space-y-5 animate-fadeIn">
+    <div className="animate-fadeIn min-w-0 space-y-5">
       <p className="sr-only">{t('nav.dashboard')}</p>
-      <div className="flex justify-start lg:hidden">
+      <div className="flex justify-start min-[1400px]:hidden">
         <DateRangePicker
           label={dateRangeLabel}
           preset={dateRangePreset}
@@ -420,7 +419,7 @@ export default function DashboardPage() {
           className="relative z-10 grid min-h-[12rem] gap-4 p-5 sm:min-h-[13rem] sm:p-7 lg:grid-cols-[1fr_38%] lg:items-center"
         >
           <div className="min-w-0">
-            <p className="text-white/85 text-sm font-black tracking-wide">
+            <p className="text-sm font-black tracking-wide text-white/85">
               {t('heritage.welcomeBack')}, {welcomeName}
             </p>
             <h2 className="mt-1 max-w-2xl text-3xl leading-tight font-black text-white sm:text-4xl">
@@ -463,13 +462,17 @@ export default function DashboardPage() {
           type="button"
           onClick={toggleHero}
           aria-label={heroHidden ? t('heritage.showBanner') : t('heritage.hideBanner')}
-          className="absolute top-3 right-3 z-20 inline-flex min-h-9 cursor-pointer items-center gap-1 rounded-full border border-white/30 bg-black/20 px-2.5 text-xs font-black text-white focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
+          className={`absolute right-3 z-20 inline-flex min-h-9 cursor-pointer items-center gap-1 rounded-full border px-2.5 text-xs font-black transition-colors focus-visible:ring-2 focus-visible:outline-none ${
+            heroHidden
+              ? 'border-border bg-muted text-foreground hover:bg-muted/80 focus-visible:ring-ring top-1/2 -translate-y-1/2'
+              : 'top-3 border-white/30 bg-black/20 text-white hover:bg-black/30 focus-visible:ring-white'
+          }`}
         >
           {heroHidden ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
           {heroHidden ? t('heritage.show') : t('heritage.hide')}
         </button>
         {heroHidden && (
-          <div className="border-card/20 bg-card text-muted-foreground flex min-h-12 items-center border-t px-4 text-xs font-semibold">
+          <div className="border-card/20 bg-card text-muted-foreground flex min-h-12 items-center border-t px-4 pr-24 text-xs font-semibold">
             {t('heritage.showBanner')}
           </div>
         )}
@@ -509,9 +512,13 @@ export default function DashboardPage() {
           tone="gold"
           onClick={() => ui.setShowPerFowlBreakdownModal(true)}
         />
-        <div className={`${DASHBOARD_KPI_CARD} border-border bg-card flex min-h-full min-w-0 flex-col rounded-2xl border p-5 shadow-sm`}>
+        <div
+          className={`${DASHBOARD_KPI_CARD} border-border bg-card flex min-h-full min-w-0 flex-col rounded-2xl border p-5 shadow-sm`}
+        >
           <div className="mb-3 flex items-center justify-between gap-2">
-            <span className={`${DASHBOARD_KPI_LABEL} text-muted-foreground font-black tracking-wider uppercase`}>
+            <span
+              className={`${DASHBOARD_KPI_LABEL} text-muted-foreground font-black tracking-wider uppercase`}
+            >
               {t('heritage.quickActions')}
             </span>
             <span className="bg-accent-soft text-accent flex h-10 w-10 items-center justify-center rounded-full">
@@ -550,7 +557,10 @@ export default function DashboardPage() {
                 : t('heritage.noMilestones')
             }
             action={
-              <Link href="/milestones" className="text-accent min-h-11 text-xs font-black uppercase hover:underline">
+              <Link
+                href="/milestones"
+                className="text-accent min-h-11 text-xs font-black uppercase hover:underline"
+              >
                 {t('heritage.viewAll')}
               </Link>
             }
@@ -562,10 +572,14 @@ export default function DashboardPage() {
               </p>
             ) : (
               visibleMilestones.map(({ fowl: bird, info }) => {
-                const code = birdCodes.get(String(bird.id)) || bird.bird_code || bird.chicken_code || '';
+                const code =
+                  birdCodes.get(String(bird.id)) || bird.bird_code || bird.chicken_code || '';
                 const next = info.next;
                 return (
-                  <div key={bird.id} className="border-border bg-muted/35 flex min-w-0 items-center gap-3 rounded-xl border p-2.5">
+                  <div
+                    key={bird.id}
+                    className="border-border bg-muted/35 flex min-w-0 items-center gap-3 rounded-xl border p-2.5"
+                  >
                     <ChickenPhoto
                       name={bird.name}
                       code={code}
@@ -576,12 +590,20 @@ export default function DashboardPage() {
                       shape="square"
                       interactive={false}
                       showLightbox={false}
-                      fallback={<span className="text-muted-foreground font-mono text-xs font-black">{initials(bird.name)}</span>}
+                      fallback={
+                        <span className="text-muted-foreground font-mono text-xs font-black">
+                          {initials(bird.name)}
+                        </span>
+                      }
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="text-card-foreground break-words text-sm font-black">{bird.name}</p>
-                      <p className="text-muted-foreground break-words text-xs font-semibold">
-                        {next ? t('heritage.becomesStage', { stage: next.stage }) : t('notifications.fullyMature')}
+                      <p className="text-card-foreground text-sm font-black break-words">
+                        {bird.name}
+                      </p>
+                      <p className="text-muted-foreground text-xs font-semibold break-words">
+                        {next
+                          ? t('heritage.becomesStage', { stage: next.stage })
+                          : t('notifications.fullyMature')}
                       </p>
                     </div>
                     {next && (
@@ -606,7 +628,10 @@ export default function DashboardPage() {
             title={t('heritage.bloodlineOverview')}
             subtitle={t('heritage.bloodlineSubtitle')}
             action={
-              <Link href="/lineage" className="text-accent min-h-11 text-xs font-black uppercase hover:underline">
+              <Link
+                href="/lineage"
+                className="text-accent min-h-11 text-xs font-black uppercase hover:underline"
+              >
                 {t('heritage.viewDetails')}
               </Link>
             }
@@ -620,12 +645,20 @@ export default function DashboardPage() {
               topStrains.slice(0, 4).map(([strain, data]) => {
                 const photo = strainPhoto.get(strain);
                 return (
-                  <div key={strain} className="border-border bg-muted/25 min-w-0 overflow-hidden rounded-xl border">
-                    <div className="relative h-20 w-full bg-muted">
+                  <div
+                    key={strain}
+                    className="border-border bg-muted/25 min-w-0 overflow-hidden rounded-xl border"
+                  >
+                    <div className="bg-muted relative h-20 w-full">
                       {photo && plainPhoto(photo) ? (
                         <ChickenPhoto
                           name={photo.name}
-                          code={birdCodes.get(String(photo.id)) || photo.bird_code || photo.chicken_code || ''}
+                          code={
+                            birdCodes.get(String(photo.id)) ||
+                            photo.bird_code ||
+                            photo.chicken_code ||
+                            ''
+                          }
                           imageUrl={photo.image_url}
                           photoPath={photo.photo_path}
                           photoThumbPath={photo.photo_thumb_path}
@@ -635,7 +668,11 @@ export default function DashboardPage() {
                           showLightbox={false}
                           className="h-20 w-full rounded-none"
                           imgClassName="object-cover"
-                          fallback={<span className="text-muted-foreground font-mono text-lg font-black">{initials(strain)}</span>}
+                          fallback={
+                            <span className="text-muted-foreground font-mono text-lg font-black">
+                              {initials(strain)}
+                            </span>
+                          }
                         />
                       ) : (
                         <span className="text-muted-foreground flex h-full items-center justify-center font-mono text-lg font-black">
@@ -643,8 +680,13 @@ export default function DashboardPage() {
                         </span>
                       )}
                     </div>
-                    <div className="min-w-0 border-t-4 p-2.5" style={{ borderTopColor: strainColor(strain) }}>
-                      <p className="text-card-foreground break-words text-sm font-black">{strain}</p>
+                    <div
+                      className="min-w-0 border-t-4 p-2.5"
+                      style={{ borderTopColor: strainColor(strain) }}
+                    >
+                      <p className="text-card-foreground text-sm font-black break-words">
+                        {strain}
+                      </p>
                       <p className="text-muted-foreground text-xs font-semibold">
                         {t('heritage.strainChickenCount', { count: data.count })}
                       </p>
@@ -680,13 +722,15 @@ export default function DashboardPage() {
                   aria-label={t('heritage.bloodlineWinRatios')}
                   data={{
                     labels: crossbreedItems.map((item) => item.name),
-                    datasets: [{
-                      data: crossbreedItems.map((item) => item.share),
-                      backgroundColor: crossbreedItems.map((item) => item.color),
-                      borderColor: chart.card,
-                      borderWidth: 3,
-                      hoverOffset: 4,
-                    }],
+                    datasets: [
+                      {
+                        data: crossbreedItems.map((item) => item.share),
+                        backgroundColor: crossbreedItems.map((item) => item.color),
+                        borderColor: chart.card,
+                        borderWidth: 3,
+                        hoverOffset: 4,
+                      },
+                    ],
                   }}
                   options={{
                     responsive: true,
@@ -720,9 +764,18 @@ export default function DashboardPage() {
                 {crossbreedItems.map((item) => {
                   const decided = item.wins + item.losses;
                   return (
-                    <li key={item.label} className="flex min-w-0 items-center gap-2 text-xs font-semibold">
-                      <span aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
-                      <span className="text-foreground min-w-0 flex-1 break-words">{item.name}</span>
+                    <li
+                      key={item.label}
+                      className="flex min-w-0 items-center gap-2 text-xs font-semibold"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="h-2.5 w-2.5 shrink-0 rounded-full"
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="text-foreground min-w-0 flex-1 break-words">
+                        {item.name}
+                      </span>
                       <span className="text-muted-foreground shrink-0 tabular-nums">
                         {decided > 0 ? `${item.share}%` : '—'}
                       </span>
@@ -742,7 +795,9 @@ export default function DashboardPage() {
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center py-8 text-center">
               <PieChart className="text-muted-foreground mb-2 h-8 w-8" aria-hidden="true" />
-              <p className="text-card-foreground mt-2 text-sm font-black">{t('heritage.noFights')}</p>
+              <p className="text-card-foreground mt-2 text-sm font-black">
+                {t('heritage.noFights')}
+              </p>
             </div>
           )}
         </section>
@@ -750,11 +805,16 @@ export default function DashboardPage() {
         <section className="border-border bg-card min-w-0 overflow-hidden rounded-2xl border shadow-sm xl:col-span-8">
           <div className="border-border flex flex-wrap items-start justify-between gap-2 border-b p-4 sm:p-5">
             <div className="min-w-0">
-              <h3 className="text-card-foreground text-base font-black">{t('heritage.historicalMatches')}</h3>
-              <p className="text-muted-foreground mt-0.5 text-xs font-semibold">{t('heritage.recentMatches')}</p>
+              <h3 className="text-card-foreground text-base font-black">
+                {t('heritage.historicalMatches')}
+              </h3>
+              <p className="text-muted-foreground mt-0.5 text-xs font-semibold">
+                {t('heritage.recentMatches')}
+              </p>
               {unlinkedCount > 0 && (
                 <p className="text-low-sample mt-1 text-xs font-bold" role="status">
-                  {t('heritage.warningNoMatch')}: {t('heritage.warningNoMatchDesc', { count: unlinkedCount })}
+                  {t('heritage.warningNoMatch')}:{' '}
+                  {t('heritage.warningNoMatchDesc', { count: unlinkedCount })}
                 </p>
               )}
             </div>
@@ -767,7 +827,11 @@ export default function DashboardPage() {
             </button>
           </div>
           <div className="max-h-[28rem] overflow-y-auto">
-            <MatchLogsTable matches={recentCockMatches} emptyText={t('heritage.noMatches')} returnTo="/dashboard" />
+            <MatchLogsTable
+              matches={recentCockMatches}
+              emptyText={t('heritage.noMatches')}
+              returnTo="/dashboard"
+            />
           </div>
         </section>
       </div>
@@ -810,26 +874,39 @@ function KpiCard({
       onClick={onClick}
       className={`${DASHBOARD_KPI_CARD} border-border bg-card group relative min-h-full min-w-0 cursor-pointer overflow-hidden rounded-2xl border p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md`}
     >
-      <span aria-hidden="true" className={`${DASHBOARD_KPI_CAPTION} pointer-events-none absolute -right-3 -bottom-4 opacity-[0.06]`}>
+      <span
+        aria-hidden="true"
+        className={`${DASHBOARD_KPI_CAPTION} pointer-events-none absolute -right-3 -bottom-4 opacity-[0.06]`}
+      >
         {watermark}
       </span>
       <div className="flex items-start justify-between gap-2">
-        <span className={`${DASHBOARD_KPI_LABEL} text-muted-foreground font-black tracking-wider uppercase`}>
+        <span
+          className={`${DASHBOARD_KPI_LABEL} text-muted-foreground font-black tracking-wider uppercase`}
+        >
           {label}
         </span>
-        <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${toneClass}`}>
+        <span
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${toneClass}`}
+        >
           {icon}
         </span>
       </div>
       <div className="mt-2 flex flex-wrap items-baseline gap-2">
-        <span className={`${DASHBOARD_KPI_VALUE} text-card-foreground font-black tabular-nums`}>{value}</span>
+        <span className={`${DASHBOARD_KPI_VALUE} text-card-foreground font-black tabular-nums`}>
+          {value}
+        </span>
         {badge && (
           <span className="bg-low-sample-bg text-low-sample rounded-full px-2 py-0.5 text-xs font-black uppercase">
             {badge}
           </span>
         )}
       </div>
-      <p className={`${DASHBOARD_KPI_CAPTION} text-muted-foreground mt-1 font-semibold break-words`}>{caption}</p>
+      <p
+        className={`${DASHBOARD_KPI_CAPTION} text-muted-foreground mt-1 font-semibold break-words`}
+      >
+        {caption}
+      </p>
     </button>
   );
 }
@@ -853,7 +930,11 @@ function SectionHeader({
         </span>
         <div className="min-w-0">
           <h3 className="text-card-foreground text-sm font-black break-words">{title}</h3>
-          {subtitle && <p className="text-muted-foreground mt-0.5 text-xs font-semibold break-words">{subtitle}</p>}
+          {subtitle && (
+            <p className="text-muted-foreground mt-0.5 text-xs font-semibold break-words">
+              {subtitle}
+            </p>
+          )}
         </div>
       </div>
       {action}

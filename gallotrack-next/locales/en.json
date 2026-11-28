@@ -765,6 +765,27 @@
     "exampleNote": "You may also add a descriptive name: {name}.",
     "offspringNumber": "OFFSPRING {number}"
   },
+  "reports": {
+    "profile": "Profile",
+    "bloodline": "Bloodline Composition",
+    "performanceMetrics": "Performance Metrics",
+    "matchHistory": "Match History",
+    "breeding": "Breeding",
+    "totalFights": "Total fights",
+    "wins": "Wins",
+    "losses": "Losses",
+    "draws": "Draws",
+    "overallWinRate": "Overall win rate (all time)",
+    "noFightsRecorded": "No fights recorded",
+    "offspring": "Offspring",
+    "pairingHistory": "Pairing history",
+    "pairing": "Pairing",
+    "partner": "Partner",
+    "status": "Status",
+    "gallery": "Gallery",
+    "noPhoto": "No photo",
+    "photoLoadFailed": "The photo could not be loaded for the report"
+  },
   "notifications": {
     "ariaLabel": "Notifications, {count} unread",
     "panelTitle": "Notifications",

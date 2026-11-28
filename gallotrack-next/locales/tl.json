@@ -765,6 +765,27 @@
     "exampleNote": "Maaari ka ring magdagdag ng deskriptibong pangalan: {name}.",
     "offspringNumber": "ANAK {number}"
   },
+  "reports": {
+    "profile": "Profile",
+    "bloodline": "Komposisyon ng Bloodline",
+    "performanceMetrics": "Mga Sukatan sa Pagganap",
+    "matchHistory": "Kasaysayan ng Laban",
+    "breeding": "Pagpaparami",
+    "totalFights": "Kabuuang laban",
+    "wins": "Panalo",
+    "losses": "Pagkatalo",
+    "draws": "Tabla",
+    "overallWinRate": "Pangkalahatang win rate (lahat ng panahon)",
+    "noFightsRecorded": "Walang naitalang laban",
+    "offspring": "Mga anak",
+    "pairingHistory": "Kasaysayan ng pairing",
+    "pairing": "Pairing",
+    "partner": "Kapareha",
+    "status": "Katayuan",
+    "gallery": "Gallery",
+    "noPhoto": "Walang larawan",
+    "photoLoadFailed": "Hindi ma-load ang larawan para sa ulat"
+  },
   "notifications": {
     "ariaLabel": "Mga Abiso, {count} ang hindi pa nabasa",
     "panelTitle": "Mga Abiso",
