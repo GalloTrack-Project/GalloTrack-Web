@@ -1,10 +1,7 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import {
-  NotificationProvider,
-  useNotifications,
-} from './notification-context';
+import { NotificationProvider, useNotifications } from './notification-context';
 import {
   loadNotificationStore,
   saveNotificationPreferences,
@@ -47,6 +44,8 @@ function Harness() {
     markRead,
     markAllRead,
     dismiss,
+    clearRead,
+    clearAll,
     updatePreferences,
   } = useNotifications();
   return (
@@ -64,6 +63,12 @@ function Harness() {
       </button>
       <button type="button" onClick={() => void dismiss(notifications[0].key)}>
         dismiss one
+      </button>
+      <button type="button" onClick={() => void clearRead()}>
+        clear read
+      </button>
+      <button type="button" onClick={() => void clearAll()}>
+        clear all
       </button>
       <button
         type="button"
@@ -119,6 +124,29 @@ describe('NotificationProvider derived flow', () => {
     expect(saveNotificationState).toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole('button', { name: 'dismiss one' }));
+    await waitFor(() => expect(screen.getByTestId('key')).toHaveTextContent(''));
+  });
+
+  it('clears read items and clears all items', async () => {
+    const { unmount } = render(
+      <NotificationProvider userId="user-1" today={today}>
+        <Harness />
+      </NotificationProvider>,
+    );
+    await waitFor(() => expect(screen.getByTestId('key')).toHaveTextContent(itemKey));
+    fireEvent.click(screen.getByRole('button', { name: 'mark all' }));
+    await waitFor(() => expect(screen.getByTestId('count')).toHaveTextContent('0'));
+    fireEvent.click(screen.getByRole('button', { name: 'clear read' }));
+    await waitFor(() => expect(screen.getByTestId('key')).toHaveTextContent(''));
+
+    unmount();
+    render(
+      <NotificationProvider userId="user-1" today={today}>
+        <Harness />
+      </NotificationProvider>,
+    );
+    await waitFor(() => expect(screen.getByTestId('key')).toHaveTextContent(itemKey));
+    fireEvent.click(screen.getByRole('button', { name: 'clear all' }));
     await waitFor(() => expect(screen.getByTestId('key')).toHaveTextContent(''));
   });
 

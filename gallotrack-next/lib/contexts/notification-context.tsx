@@ -1,13 +1,6 @@
 'use client';
 
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useAuthOptional } from '@/lib/contexts/auth-context';
 import { useFowl } from '@/lib/contexts/fowl-context';
 import {
@@ -40,6 +33,8 @@ type NotificationContextValue = {
   markRead: (key: string) => Promise<void>;
   markAllRead: () => Promise<void>;
   dismiss: (key: string) => Promise<void>;
+  clearRead: () => Promise<void>;
+  clearAll: () => Promise<void>;
   updatePreferences: (preferences: MilestoneNotificationPreferences) => Promise<void>;
   resetPreferences: () => Promise<void>;
 };
@@ -73,18 +68,18 @@ function stateForNotification(
     return { read_at: null, dismissed_at: null };
   }
   const readAt = memberStates.every((value) => value.read_at)
-    ? memberStates
+    ? (memberStates
         .map((value) => value.read_at)
         .filter((value): value is string => Boolean(value))
         .sort()
-        .pop() ?? null
+        .pop() ?? null)
     : null;
   const dismissedAt = memberStates.every((value) => value.dismissed_at)
-    ? memberStates
+    ? (memberStates
         .map((value) => value.dismissed_at)
         .filter((value): value is string => Boolean(value))
         .sort()
-        .pop() ?? null
+        .pop() ?? null)
     : null;
   return { read_at: readAt, dismissed_at: dismissedAt };
 }
@@ -149,8 +144,7 @@ export function NotificationProvider({
 
   const activeToday = today ?? clock;
   const derived = useMemo(
-    () =>
-      currentUserId ? buildMilestoneNotifications(fowl.fowls, preferences, activeToday) : [],
+    () => (currentUserId ? buildMilestoneNotifications(fowl.fowls, preferences, activeToday) : []),
     [currentUserId, fowl.fowls, preferences, activeToday],
   );
 
@@ -259,6 +253,44 @@ export function NotificationProvider({
     [notifications, notificationsState, persistState],
   );
 
+  const dismissMany = useCallback(
+    async (targets: NotificationView[]) => {
+      if (targets.length === 0) return;
+      const dismissedAt = new Date().toISOString();
+      const entriesByKey = new Map<string, NotificationStateValue & { key: string }>();
+      for (const notification of targets) {
+        for (const key of uniqueKeys([notification.key, ...notification.memberKeys])) {
+          entriesByKey.set(key, {
+            key,
+            read_at: notificationsState[key]?.read_at ?? notification.read_at,
+            dismissed_at: dismissedAt,
+          });
+        }
+      }
+      const entries = [...entriesByKey.values()];
+      setNotificationsState((previous) => {
+        const next = { ...previous };
+        for (const entry of entries) {
+          next[entry.key] = {
+            read_at: entry.read_at,
+            dismissed_at: entry.dismissed_at,
+          };
+        }
+        return next;
+      });
+      await persistState(entries);
+    },
+    [notificationsState, persistState],
+  );
+
+  const clearRead = useCallback(async () => {
+    await dismissMany(notifications.filter((notification) => Boolean(notification.read_at)));
+  }, [dismissMany, notifications]);
+
+  const clearAll = useCallback(async () => {
+    await dismissMany(notifications);
+  }, [dismissMany, notifications]);
+
   const updatePreferences = useCallback(
     async (nextPreferences: MilestoneNotificationPreferences) => {
       const normalized = normalizeNotificationPreferences(nextPreferences);
@@ -290,6 +322,8 @@ export function NotificationProvider({
       markRead,
       markAllRead,
       dismiss,
+      clearRead,
+      clearAll,
       updatePreferences,
       resetPreferences,
     }),
@@ -304,6 +338,8 @@ export function NotificationProvider({
       markRead,
       markAllRead,
       dismiss,
+      clearRead,
+      clearAll,
       updatePreferences,
       resetPreferences,
     ],
